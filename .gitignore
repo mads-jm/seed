@@ -1,0 +1,68 @@
+# --- Rust / Cargo ---
+/target/
+**/target/
+# Keep Cargo.lock: this is a binary workspace
+*.rs.bk
+*.pdb
+*.profraw
+*.profdata
+
+# --- seed runtime / tests ---
+# Per-test simulated SEED_HOME dirs
+.seed-test-home/
+**/.seed-test-home/
+# Local dev state (if anyone points SEED_HOME into the repo)
+/.seed/
+# Log files produced by seedd / seed-tui when SEED_HOME is local
+*.log
+*.log.*
+
+# --- Secrets / env ---
+.env
+.env.*
+!.env.example
+
+# --- Coverage ---
+/coverage/
+lcov.info
+tarpaulin-report.html
+
+# --- Editors / IDEs ---
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~
+.nvim.lua
+.helix/
+
+# --- OS cruft ---
+**/.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# --- Backups / merge leftovers ---
+*.bak
+*.orig
+*.rej
+
+# --- Obsidian (in `seed - docs/`) ---
+# Per-user workspace state — not meant to travel with the vault
+seed - docs/.obsidian/workspace.json
+seed - docs/.obsidian/workspace-mobile.json
+seed - docs/.obsidian/workspaces.json
+# Plugin runtime caches
+seed - docs/.obsidian/plugins/*/data.json.bak
+# Obsidian Git plugin internals
+seed - docs/.obsidian/plugins/obsidian-git/.git/
+# Trash + local-only attachments bucket
+seed - docs/.trash/
+seed - docs/.obsidian/trash/
+
+# --- Generated docs export ---
+# Webpage HTML Export writes here; regenerate on demand
+# (comment this out if you publish via GitHub Pages from /docs)
+# /docs/
