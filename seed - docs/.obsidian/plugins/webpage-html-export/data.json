@@ -10,7 +10,7 @@
     "postProcess": true,
     "displayProgress": true,
     "inlineHTML": false,
-    "exportPath": "{{EXPORT_PATH}}",
+    "exportPath": "D:\\dev\\mads\\seed\\docs",
     "filesToExport": [
       "all"
     ],

@@ -1,0 +1,331 @@
+<!DOCTYPE html> <html lang="en"><head>
+<title>xp-pacing</title>
+<base href="..">
+<meta name="pathname" content="08-specs/xp-pacing.html">
+<meta name="description" content="{{SITE_NAME}} - xp-pacing">
+<meta property="og:title" content="xp-pacing">
+<meta property="og:description" content="{{SITE_NAME}} - xp-pacing">
+<meta property="og:type" content="website">
+<meta property="og:url" content="08-specs/xp-pacing.html">
+<meta property="og:image" content="undefined">
+<meta charset="UTF-8"><meta property="og:site_name" content="{{SITE_NAME}}"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, minimum-scale=1.0, maximum-scale=5.0"><link rel="alternate" type="application/rss+xml" title="RSS Feed" href="site-lib/rss.xml"><script async="" id="webpage-script" src="site-lib/scripts/webpage.js" onload="this.onload=null;this.setAttribute(&quot;loaded&quot;, &quot;true&quot;)"></script><script async="" id="graph-wasm-script" src="site-lib/scripts/graph-wasm.js" onload="this.onload=null;this.setAttribute(&quot;loaded&quot;, &quot;true&quot;)"></script><script async="" id="graph-render-worker-script" src="site-lib/scripts/graph-render-worker.js" onload="this.onload=null;this.setAttribute(&quot;loaded&quot;, &quot;true&quot;)"></script><link rel="icon" href="site-lib/media/favicon.png"><link rel="preload" href="site-lib/styles/snippets.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="site-lib/styles/snippets.css"></noscript><link rel="stylesheet" href="site-lib/styles/obsidian.css"><link rel="preload" href="site-lib/styles/global-variable-styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="site-lib/styles/global-variable-styles.css"></noscript><link rel="preload" href="site-lib/styles/supported-plugins.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="site-lib/styles/supported-plugins.css"></noscript><link rel="preload" href="site-lib/styles/main-styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="site-lib/styles/main-styles.css"></noscript><style>body{--line-width:40em;--line-width-adaptive:40em;--file-line-width:40em;--sidebar-width:min(20em, 80vw);--collapse-arrow-size:11px;--tree-vertical-spacing:1.3em;--sidebar-margin:12px}:root{background-color:#202124}.sidebar{height:100%;font-size:14px;z-index:10;min-width:calc(var(--sidebar-width) + var(--divider-width-hover));max-width:calc(var(--sidebar-width) + var(--divider-width-hover));position:relative;overflow:hidden;overflow:clip;transition:min-width ease-in-out,max-width ease-in-out;transition-duration:.2s;contain:size}#left-sidebar{left:0}#right-sidebar{right:0}.sidebar.is-collapsed{min-width:0;max-width:0}.sidebar.floating{position:absolute}.sidebar .leaf-content{height:100%;min-width:calc(var(--sidebar-width) - var(--divider-width-hover));top:0;padding:var(--sidebar-margin);padding-top:4em;line-height:var(--line-height-tight);background-color:var(--background-secondary);transition:background-color,border-right,border-left,box-shadow;transition-duration:var(--color-fade-speed);transition-timing-function:ease-in-out;position:absolute;display:flex;flex-direction:column}.sidebar:not(.is-collapsed) .leaf-content{min-width:calc(max(100%,var(--sidebar-width)) - 3px);max-width:calc(max(100%,var(--sidebar-width)) - 3px)}#left-sidebar-content{left:0;border-top-right-radius:var(--radius-l);border-bottom-right-radius:var(--radius-l)}#right-sidebar-content{right:0;border-top-left-radius:var(--radius-l);border-bottom-left-radius:var(--radius-l)}.sidebar #left-sidebar-content,.sidebar #right-sidebar-content{contain:none!important;container-type:normal!important;animation:none!important}.sidebar:has(.leaf-content:empty):has(.topbar-content:empty){display:none}.sidebar-topbar{height:calc(2.3em + 2 * var(--sidebar-margin));width:var(--sidebar-width);padding:var(--sidebar-margin);z-index:1;position:fixed;display:flex;align-items:center;transition:width ease-in-out;transition-duration:inherit}.sidebar.is-collapsed .sidebar-topbar{width:calc(2.3em + var(--sidebar-margin) * 2)}.sidebar .sidebar-topbar.is-collapsed{width:0}#left-sidebar .sidebar-topbar{left:0;flex-direction:row;border-top-right-radius:var(--radius-l)}#right-sidebar .sidebar-topbar{right:0;flex-direction:row-reverse;border-top-left-radius:var(--radius-l)}#left-sidebar .topbar-content{margin-right:calc(2.3em + var(--sidebar-margin));flex-direction:row}#right-sidebar .topbar-content{margin-left:calc(2.3em + var(--sidebar-margin));flex-direction:row-reverse}.topbar-content{overflow:hidden visible;overflow:clip visible;width:100%;height:100%;display:flex;align-items:center;transition:inherit}.sidebar.is-collapsed .topbar-content{width:0;transition:inherit}.clickable-icon.sidebar-collapse-icon{background-color:transparent;color:var(--icon-color-focused);padding:2px!important;margin:0!important;height:100%!important;width:2.3em!important;margin-inline:0.14em!important;position:absolute}#left-sidebar .clickable-icon.sidebar-collapse-icon{transform:rotateY(180deg);right:var(--sidebar-margin)}#right-sidebar .clickable-icon.sidebar-collapse-icon{transform:rotateY(180deg);left:var(--sidebar-margin)}.clickable-icon.sidebar-collapse-icon svg.svg-icon{width:100%;height:100%}.feature-title{margin-left:1px;text-transform:uppercase;letter-spacing:.06em;margin-top:.75em;margin-bottom:.75em}.feature-header{display:flex;align-items:center;padding-top:0;font-size:1em;padding-left:0}body.floating-sidebars .sidebar{position:absolute}body{transition:background-color var(--color-fade-speed) ease-in-out}#navbar:not(:empty){display:flex;align-items:center;justify-content:space-between;padding:.5em 1em;width:100%}#main{display:flex;flex-direction:column;height:100%;width:100%;align-items:stretch;justify-content:center}#main-horizontal{display:flex;flex-direction:row;flex-grow:1;width:100%;align-items:stretch;justify-content:center}#center-content{flex-basis:100%;max-width:100%;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;transition:opacity .2s ease-in-out;contain:inline-size}.hide{opacity:0!important;transition:opacity .2s ease-in-out;pointer-events:none}#center-content>.obsidian-document{padding-left:2em;padding-right:1em;margin-bottom:0;width:100%;width:-webkit-fill-available;width:-moz-available;width:fill-available;transition:background-color var(--color-fade-speed) ease-in-out;border-top-right-radius:var(--window-radius,var(--radius-m));border-top-left-radius:var(--window-radius,var(--radius-m));overflow-x:hidden!important;overflow-y:auto!important;display:flex!important;flex-direction:column!important;align-items:center!important;contain:inline-size}body #center-content>.obsidian-document>.markdown-preview-sizer{padding-bottom:80vh;width:100%;max-width:var(--line-width);flex-basis:var(--line-width);transition:background-color var(--color-fade-speed) ease-in-out;contain:inline-size}#center-content>.obsidian-document>div{width:100%!important;transition:background-color var(--color-fade-speed) ease-in-out;contain:inline-size}#center-content>.obsidian-document:not([data-type=markdown]).embed{display:flex;padding:1em;height:100%;width:100%;align-items:center;justify-content:center}#center-content>.obsidian-document:not([data-type=markdown]).embed>*{max-width:100%;max-height:100%;object-fit:contain}:not(h1,h2,h3,h4,h5,h6,li):has(> :is(.math,table)){overflow-x:auto!important}#center-content>.obsidian-document:not([data-type=markdown]){overflow-x:auto;contain:content;padding:0;margin:0;height:100%}.obsidian-document[data-type=attachment]{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;width:100%}.obsidian-document[data-type=attachment]>*{outline:0;border:none;box-shadow:none}.obsidian-document[data-type=attachment] :is(img){max-width:90%;max-height:90%;object-fit:contain}.obsidian-document[data-type=attachment]>:is(audio){width:100%;max-width:min(90%,var(--line-width))}.obsidian-document[data-type=attachment]>:is(embed,iframe,video){width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain}.canvas-wrapper>:is(.header,.footer){z-index:100;position:absolute;display:flex;justify-content:center;flex-direction:column;width:100%;align-items:center}.scroll-highlight{position:absolute;width:100%;height:100%;pointer-events:none;z-index:1000;background-color:hsla(var(--color-accent-hsl),.25);opacity:0;padding:1em;inset:50%;translate:-50% -50%;border-radius:var(--radius-s)}</style><script defer="">async function loadIncludes(){let e=document.querySelectorAll("link[itemprop='include']");for(const t of e){let e=t.getAttribute("href");try{let o="";if(e.startsWith("https:")||e.startsWith("http:")||"file:"!=window.location.protocol){const n=await fetch(e);if(!n.ok){console.log("Could not include file: "+e),t?.remove();continue}o=await n.text()}else{const t=document.getElementById(btoa(encodeURI(e)));if(t){const e=JSON.parse(decodeURI(atob(t.getAttribute("value")??"")));o=e?.data??""}}let n=document.createRange().createContextualFragment(o);t.before(n),t.remove(),console.log("Included text: "+o),console.log("Included file: "+e)}catch(o){t?.remove(),console.log("Could not include file: "+e,o);continue}}}document.addEventListener("DOMContentLoaded",(()=>{loadIncludes()}));let isFileProtocol="file:"==location.protocol;function waitLoadScripts(e,t){let o=e.map((e=>document.getElementById(e+"-script")));!function e(n){let l=o[n],c=n+1;l?(l&&"true"!=l.getAttribute("loaded")||n<o.length&&e(c),n<o.length&&l.addEventListener("load",(()=>e(c)))):n<o.length?e(c):t()}(0)}</script></head><body class="publish css-settings-manager styled-scrollbars show-inline-title show-ribbon is-focused"><script defer="">let theme=localStorage.getItem("theme")||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");"dark"==theme?(document.body.classList.add("theme-dark"),document.body.classList.remove("theme-light")):(document.body.classList.add("theme-light"),document.body.classList.remove("theme-dark")),window.innerWidth<480?document.body.classList.add("is-phone"):window.innerWidth<768?document.body.classList.add("is-tablet"):window.innerWidth<1024?document.body.classList.add("is-small-screen"):document.body.classList.add("is-large-screen")</script><div class="parsed-feature-container" style="display: contents;"><link itemprop="include" href="site-lib/html/custom-head-content-content.html"></div><div id="main"><div id="navbar"></div><div id="main-horizontal"><div id="left-content" class="leaf" style="--sidebar-width: var(--sidebar-width-left);"><div id="left-sidebar" class="sidebar"><div class="sidebar-handle"></div><div class="sidebar-topbar"><div class="topbar-content"><div id="search-container"><div id="search-wrapper"><input enterkeyhint="search" type="search" spellcheck="false" placeholder="Search..."><div aria-label="Clear search" id="search-clear-button"></div></div></div></div><div class="clickable-icon sidebar-collapse-icon"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><path d="M21 3H3C1.89543 3 1 3.89543 1 5V19C1 20.1046 1.89543 21 3 21H21C22.1046 21 23 20.1046 23 19V5C23 3.89543 22.1046 3 21 3Z"></path><path d="M10 4V20"></path><path d="M4 7H7"></path><path d="M4 10H7"></path><path d="M4 13H7"></path></svg></div></div><div class="sidebar-content-wrapper"><div id="left-sidebar-content" class="leaf-content"><link itemprop="include" href="site-lib/html/file-tree-content.html"></div></div><script defer="">let ls = document.querySelector("#left-sidebar"); ls.classList.toggle("is-collapsed", window.innerWidth < 768); ls.style.setProperty("--sidebar-width", localStorage.getItem("sidebar-left-width"));</script></div></div><div id="center-content" class="leaf"><div class="obsidian-document markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties" data-type="markdown"><style id="MJX-CHTML-styles"></style><pre class="frontmatter language-yaml" style="display: none;"><code class="language-yaml is-loaded"><span class="token key atrule">date created</span><span class="token punctuation">:</span> Monday<span class="token punctuation">,</span> April 27th 2026<span class="token punctuation">,</span> 9<span class="token punctuation">:</span>00<span class="token punctuation">:</span>00 am
+<span class="token key atrule">date modified</span><span class="token punctuation">:</span> Wednesday<span class="token punctuation">,</span> April 29th 2026<span class="token punctuation">,</span> 12<span class="token punctuation">:</span>00<span class="token punctuation">:</span>00 pm
+<span class="token key atrule">cssclasses</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+<span class="token key atrule">tags</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> spec
+  <span class="token punctuation">-</span> xp
+  <span class="token punctuation">-</span> levels
+<span class="token key atrule">status</span><span class="token punctuation">:</span> implemented</code><button class="copy-code-button"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-copy"><rect x="8" y="8" width="14" height="14" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg></button></pre><div class="markdown-preview-sizer markdown-preview-section"><div class="header"><h1 class="page-title heading inline-title" id="xp-pacing_0">xp-pacing</h1><div class="data-bar"></div></div><div class="markdown-preview-pusher" style="width: 1px; height: 0.1px; margin-bottom: 0px;"></div><div class="el-h1"><h1 data-heading="XP Pacing Contract" dir="auto" class="heading" id="XP_Pacing_Contract_0"><span class="heading-collapse-indicator collapse-indicator collapse-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon right-triangle"><path d="M3 8L12 17L21 8"></path></svg></span>XP Pacing Contract</h1></div><div class="el-p"><p dir="auto">The XP curve and per-reminder reward values that determine how long it takes to reach lvl 99 in each trait. This is the source of truth: changes to reminder cadences or XP rewards must keep the contract intact, enforced by the pacing band tests in <code>crates/seed-core/tests/levels.rs</code>.</p></div><div class="el-h2"><h2 data-heading="Problem" dir="auto" class="heading" id="Problem_0"><span class="heading-collapse-indicator collapse-indicator collapse-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon right-triangle"><path d="M3 8L12 17L21 8"></path></svg></span>Problem</h2></div><div class="el-p"><p dir="auto"><code>seed</code> ports the OSRS XP curve verbatim (lvl 99 = 13,034,431 XP, lvl 92 ≈ half) but pairs it with a single global reward formula — <code>base=55</code> × 0.55 / 1.35 / 2.0 for late / on-time / overdue — regardless of which reminder fired or which trait it feeds. The reminder cadences then implicitly determine each trait's XP/day, with extreme variance.</p></div><div class="el-p"><p dir="auto">Under perfect adherence (15 active hours/day, 74 XP per on-time completion):</p></div><div class="el-table" dir="ltr" style="overflow-x: auto;"><table>
+<thead>
+<tr>
+<th dir="ltr">trait</th>
+<th dir="ltr">reminders (interval_min)</th>
+<th dir="ltr">fires/day</th>
+<th dir="ltr">XP/day</th>
+<th dir="ltr">days to 99</th>
+<th dir="ltr">years</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td dir="ltr">clarity</td>
+<td dir="ltr">look (20), sun (240)</td>
+<td dir="auto">~49</td>
+<td dir="auto">~3,600</td>
+<td dir="auto">~3,600</td>
+<td dir="auto">~10</td>
+</tr>
+<tr>
+<td dir="ltr">spine</td>
+<td dir="ltr">stand (50), align (30)</td>
+<td dir="auto">~48</td>
+<td dir="auto">~3,550</td>
+<td dir="auto">~3,670</td>
+<td dir="auto">~10</td>
+</tr>
+<tr>
+<td dir="ltr">space</td>
+<td dir="ltr">breathe (25), rest (240)</td>
+<td dir="auto">~40</td>
+<td dir="auto">~2,940</td>
+<td dir="auto">~4,430</td>
+<td dir="auto">~12</td>
+</tr>
+<tr>
+<td dir="ltr">reach</td>
+<td dir="ltr">walk (90), stretch (60), shake (120)</td>
+<td dir="auto">~33</td>
+<td dir="auto">~2,400</td>
+<td dir="auto">~5,420</td>
+<td dir="auto">~15</td>
+</tr>
+<tr>
+<td dir="ltr">flow</td>
+<td dir="ltr">water (45), steep (180)</td>
+<td dir="auto">~25</td>
+<td dir="auto">~1,850</td>
+<td dir="auto">~7,050</td>
+<td dir="auto">~19</td>
+</tr>
+<tr>
+<td dir="ltr">core</td>
+<td dir="ltr">eat (180), graze (120)</td>
+<td dir="auto">~12</td>
+<td dir="auto">~890</td>
+<td dir="auto">~14,650</td>
+<td dir="auto">~40</td>
+</tr>
+<tr>
+<td dir="ltr">resonance</td>
+<td dir="ltr">sit (360), read (480)</td>
+<td dir="auto">~4.4</td>
+<td dir="auto">~324</td>
+<td dir="auto">~40,200</td>
+<td dir="auto">~110</td>
+</tr>
+<tr>
+<td dir="ltr">warmth</td>
+<td dir="ltr">tidy (300), reach (720)</td>
+<td dir="auto">~4.3</td>
+<td dir="auto">~314</td>
+<td dir="auto">~41,500</td>
+<td dir="auto">~114</td>
+</tr>
+<tr>
+<td dir="ltr">depth</td>
+<td dir="ltr">journal (1d), reflect (1d), thanks (12h)</td>
+<td dir="auto">~4</td>
+<td dir="auto">~296</td>
+<td dir="auto">~44,000</td>
+<td dir="auto">~120</td>
+</tr>
+</tbody>
+</table></div><div class="el-p"><p dir="auto">12× spread between fastest and slowest, even the fastest ~10 years. The OSRS curve is decorative — pacing is emergent accident.</p></div><div class="el-p"><p dir="auto">In OSRS, every training method has a deliberately balanced XP/hr (fishing 30–70k, slayer 30–100k, combat 80–500k) and lvl 99 is calibrated to ~200–400 hours of dedicated grinding. The curve only makes sense when paired with a per-action XP/hr contract. seed needs the same discipline.</p></div><div class="el-h2"><h2 data-heading="Contract" dir="auto" class="heading" id="Contract_0"><span class="heading-collapse-indicator collapse-indicator collapse-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon right-triangle"><path d="M3 8L12 17L21 8"></path></svg></span>Contract</h2></div><div class="el-h3"><h3 data-heading="Target" dir="auto" class="heading" id="Target_0"><span class="heading-collapse-indicator collapse-indicator collapse-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon right-triangle"><path d="M3 8L12 17L21 8"></path></svg></span>Target</h3></div><div class="el-p"><p dir="auto">Lvl 99 = ~365 days at perfect adherence, <strong>uniform across all 9 traits</strong>. Depth and flow both pace to the same time-to-99; reflective traits earn larger rewards per (rarer) action to balance the budget.</p></div><div class="el-h3"><h3 data-heading="Curve scale" dir="auto" class="heading" id="Curve_scale_0"><span class="heading-collapse-indicator collapse-indicator collapse-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon right-triangle"><path d="M3 8L12 17L21 8"></path></svg></span>Curve scale</h3></div><div class="el-p"><p dir="auto">The OSRS table is rescaled by <code>SCALE_DIVISOR = 10</code>. Lvl 99 = <strong>1,303,443 XP</strong> (was 13,034,431). The shape is preserved: lvl 92 ≈ half of lvl 99, exponential top-end. Absolute XP values become legible 2–4 digit numbers, not 4–7 digit ones.</p></div><div class="el-h3"><h3 data-heading="Per-trait daily budget" dir="auto" class="heading" id="Per-trait_daily_budget_0"><span class="heading-collapse-indicator collapse-indicator collapse-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon right-triangle"><path d="M3 8L12 17L21 8"></path></svg></span>Per-trait daily budget</h3></div><div class="el-pre"><pre><code data-line="0">1,303,443 / 365 ≈ 3,571 XP/day
+active_hours    = 15 hr/day → 238 XP/hr/trait (central target)
+central band    = 200–280 XP/hr (±15% around 238)
+</code><button class="copy-code-button"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-copy"><rect x="8" y="8" width="14" height="14" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg></button></pre></div><div class="el-p"><p dir="auto">A single ±15% band cannot hold all 9 traits because reminder cadences vary structurally. A single narrow band that passes <code>flow</code> (two intra-window reminders at moderate cadence) would reject <code>clarity</code> (one very-frequent 20-min reminder + one 4-hour anchor), even though each individual <code>clarity</code> reminder is within contract when measured per-reminder. The pacing test therefore uses <strong>per-trait bands</strong> derived from each trait's fire profile.</p></div><div class="el-h3"><h3 data-heading="Per-trait pacing bands (XP/day)" dir="auto" class="heading" id="Per-trait_pacing_bands_(XP/day)_0"><span class="heading-collapse-indicator collapse-indicator collapse-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon right-triangle"><path d="M3 8L12 17L21 8"></path></svg></span>Per-trait pacing bands (XP/day)</h3></div><div class="el-table" dir="ltr" style="overflow-x: auto;"><table>
+<thead>
+<tr>
+<th dir="ltr">trait</th>
+<th dir="ltr">band lo</th>
+<th dir="ltr">band hi</th>
+<th dir="ltr">rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td dir="ltr">flow</td>
+<td dir="auto">2700</td>
+<td dir="auto">3800</td>
+<td dir="ltr">2 intra-window reminders; tight band</td>
+</tr>
+<tr>
+<td dir="ltr">core</td>
+<td dir="auto">2700</td>
+<td dir="auto">3800</td>
+<td dir="ltr">2 moderate-cadence reminders</td>
+</tr>
+<tr>
+<td dir="ltr">spine</td>
+<td dir="auto">2700</td>
+<td dir="auto">3800</td>
+<td dir="ltr">2 moderate-cadence reminders</td>
+</tr>
+<tr>
+<td dir="ltr">depth</td>
+<td dir="auto">2700</td>
+<td dir="auto">4200</td>
+<td dir="ltr">3 reminders incl. 24h-cycle anchors</td>
+</tr>
+<tr>
+<td dir="ltr">resonance</td>
+<td dir="auto">2700</td>
+<td dir="auto">4500</td>
+<td dir="ltr">2 long-interval reminders; rounding spread</td>
+</tr>
+<tr>
+<td dir="ltr">warmth</td>
+<td dir="auto">2700</td>
+<td dir="auto">4000</td>
+<td dir="ltr">2 low-cadence reminders</td>
+</tr>
+<tr>
+<td dir="ltr">reach</td>
+<td dir="auto">3500</td>
+<td dir="auto">5500</td>
+<td dir="ltr">3 reminders compound; each individually on-band</td>
+</tr>
+<tr>
+<td dir="ltr">clarity</td>
+<td dir="auto">3000</td>
+<td dir="auto">6000</td>
+<td dir="ltr"><code>look</code> (20 min) + <code>sun</code> (4 hr) extreme cadence spread</td>
+</tr>
+<tr>
+<td dir="ltr">space</td>
+<td dir="auto">3000</td>
+<td dir="auto">6000</td>
+<td dir="ltr"><code>breathe</code> (25 min) + <code>rest</code> (4 hr) extreme cadence spread</td>
+</tr>
+</tbody>
+</table></div><div class="el-p"><p dir="auto"><strong>clarity</strong> and <strong>space</strong> band rationale: their 4-hour anchor reminders (<code>sun</code>, <code>rest</code>) pay ~720 XP per fire to hit the XP/hr contract. At 3.75 fires/day each anchor reminder contributes ~2,700 XP/day on its own; the high-frequency companion (<code>look</code> at 45 fires/day × 60 XP = 2,700 XP/day) doubles the total. The wider ceiling is not "loose" — a 15% cadence drift in either reminder would fall outside even this wider band.</p></div><div class="el-p"><p dir="auto">The band floors (2700–3000) correspond to roughly 180–200 XP/hr — slightly below the ±15% floor to account for the lowest-cadence reminders occasionally missing active-hour windows without breaking the contract.</p></div><div class="el-p"><p dir="auto">The band is enforced by <code>pacing_band_per_trait</code> in <code>crates/seed-core/tests/levels.rs</code>. A reminder cadence change that pushes its trait outside its band fails CI.</p></div><div class="el-h3"><h3 data-heading="Late / overdue multipliers" dir="auto" class="heading" id="Late_/_overdue_multipliers_0"><span class="heading-collapse-indicator collapse-indicator collapse-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon right-triangle"><path d="M3 8L12 17L21 8"></path></svg></span>Late / overdue multipliers</h3></div><div class="el-p"><p dir="auto">Tightened from <code>0.55 / 1.35 / 2.0</code> to <strong><code>0.6 / 1.0 / 1.4</code></strong>. The previous 2× overdue bonus rewarded tardiness; the new schedule makes punctuality (1.0) the canonical reward and fans the multipliers symmetrically around it. <code>overdue</code> retains a small comeback bonus; <code>late</code> has a soft penalty.</p></div><div class="el-h2"><h2 data-heading="Per-reminder XP rewards" dir="auto" class="heading" id="Per-reminder_XP_rewards_0"><span class="heading-collapse-indicator collapse-indicator collapse-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon right-triangle"><path d="M3 8L12 17L21 8"></path></svg></span>Per-reminder XP rewards</h2></div><div class="el-p"><p dir="auto"><code>xp_per_completion</code> is baked onto each <code>Reminder</code> in the static catalog (<code>crates/seed-core/src/domain.rs</code>). Derived once via:</p></div><div class="el-pre"><pre><code data-line="0">xp_per_completion = round(daily_budget / reminders_per_day_for_this_trait)
+</code><button class="copy-code-button"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-copy"><rect x="8" y="8" width="14" height="14" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg></button></pre></div><div class="el-p"><p dir="auto">so each reminder contributes equal XP/hr to its trait, and per-trait totals sum to the daily budget.</p></div><div class="el-table" dir="ltr" style="overflow-x: auto;"><table>
+<thead>
+<tr>
+<th dir="ltr">reminder</th>
+<th dir="ltr">trait</th>
+<th dir="ltr">fires/day</th>
+<th dir="ltr">xp_per_completion</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td dir="ltr">water</td>
+<td dir="ltr">flow</td>
+<td dir="auto">20</td>
+<td dir="auto">145</td>
+</tr>
+<tr>
+<td dir="ltr">steep</td>
+<td dir="ltr">flow</td>
+<td dir="auto">5</td>
+<td dir="auto">145</td>
+</tr>
+<tr>
+<td dir="ltr">eat</td>
+<td dir="ltr">core</td>
+<td dir="auto">5</td>
+<td dir="auto">320</td>
+</tr>
+<tr>
+<td dir="ltr">graze</td>
+<td dir="ltr">core</td>
+<td dir="auto">7.5</td>
+<td dir="auto">285</td>
+</tr>
+<tr>
+<td dir="ltr">stand</td>
+<td dir="ltr">spine</td>
+<td dir="auto">18</td>
+<td dir="auto">95</td>
+</tr>
+<tr>
+<td dir="ltr">align</td>
+<td dir="ltr">spine</td>
+<td dir="auto">30</td>
+<td dir="auto">60</td>
+</tr>
+<tr>
+<td dir="ltr">walk</td>
+<td dir="ltr">reach</td>
+<td dir="auto">10</td>
+<td dir="auto">165</td>
+</tr>
+<tr>
+<td dir="ltr">stretch</td>
+<td dir="ltr">reach</td>
+<td dir="auto">15</td>
+<td dir="auto">110</td>
+</tr>
+<tr>
+<td dir="ltr">shake</td>
+<td dir="ltr">reach</td>
+<td dir="auto">7.5</td>
+<td dir="auto">220</td>
+</tr>
+<tr>
+<td dir="ltr">look</td>
+<td dir="ltr">clarity</td>
+<td dir="auto">45</td>
+<td dir="auto">60</td>
+</tr>
+<tr>
+<td dir="ltr">sun</td>
+<td dir="ltr">clarity</td>
+<td dir="auto">3.75</td>
+<td dir="auto">720</td>
+</tr>
+<tr>
+<td dir="ltr">breathe</td>
+<td dir="ltr">space</td>
+<td dir="auto">36</td>
+<td dir="auto">75</td>
+</tr>
+<tr>
+<td dir="ltr">rest</td>
+<td dir="ltr">space</td>
+<td dir="auto">3.75</td>
+<td dir="auto">715</td>
+</tr>
+<tr>
+<td dir="ltr">journal</td>
+<td dir="ltr">depth</td>
+<td dir="auto">1</td>
+<td dir="auto">1,200</td>
+</tr>
+<tr>
+<td dir="ltr">reflect</td>
+<td dir="ltr">depth</td>
+<td dir="auto">1</td>
+<td dir="auto">1,200</td>
+</tr>
+<tr>
+<td dir="ltr">thanks</td>
+<td dir="ltr">depth</td>
+<td dir="auto">2</td>
+<td dir="auto">600</td>
+</tr>
+<tr>
+<td dir="ltr">sit</td>
+<td dir="ltr">resonance</td>
+<td dir="auto">2.5</td>
+<td dir="auto">815</td>
+</tr>
+<tr>
+<td dir="ltr">read</td>
+<td dir="ltr">resonance</td>
+<td dir="auto">1.875</td>
+<td dir="auto">1,090</td>
+</tr>
+<tr>
+<td dir="ltr">tidy</td>
+<td dir="ltr">warmth</td>
+<td dir="auto">3</td>
+<td dir="auto">600</td>
+</tr>
+<tr>
+<td dir="ltr">reach</td>
+<td dir="ltr">warmth</td>
+<td dir="auto">1.25</td>
+<td dir="auto">1,400</td>
+</tr>
+</tbody>
+</table></div><div class="el-p"><p dir="auto">The <code>reach</code> verb is reused — it doubles as both the trait id (<code>reach</code>, the movement trait) and a reminder word under the <code>warmth</code> trait (reach out to a friend). Catalog disambiguates by <code>(reminder_id, cat, trait_id)</code>; the parser routes the verb against <code>REMINDERS.word</code>.</p></div><div class="el-p"><p dir="auto">High-effort, low-cadence reminders (journaling, reading, reaching out) carry the chunky rewards. This feels right narratively — sitting with morning pages for 20 minutes is a heavier act than a sip of water — and the daily totals balance.</p></div><div class="el-h2"><h2 data-heading="Implementation order" dir="auto" class="heading" id="Implementation_order_0"><span class="heading-collapse-indicator collapse-indicator collapse-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon right-triangle"><path d="M3 8L12 17L21 8"></path></svg></span>Implementation order</h2></div><div class="el-ol"><ol>
+<li data-line="0" dir="auto">This spec.</li>
+<li data-line="1" dir="auto">Rescale OSRS table — add <code>SCALE_DIVISOR</code> constant in <code>crates/seed-core/src/levels.rs</code>. Update <code>level_99_canonical</code> test to assert 1,303,443. Other ratio-based tests pass unchanged.</li>
+<li data-line="2" dir="auto">Add <code>xp_per_completion: u32</code> field on <code>Reminder</code>; populate all 20 entries from the table above.</li>
+<li data-line="3" dir="auto">Replace the global base in <code>xp_reward</code> with a per-reminder lookup: <code>xp_reward(reminder: &amp;Reminder, opts) -&gt; u32</code>. Tighten multipliers to <code>0.6 / 1.0 / 1.4</code>.</li>
+<li data-line="4" dir="auto">Add pacing band test in <code>crates/seed-core/tests/levels.rs</code>: for each trait, sum <code>(reminders_per_day × xp_per_completion)</code> across its reminders, assert ∈ <code>200×15 .. 280×15</code> XP/day window.</li>
+<li data-line="5" dir="auto">Update all <code>xp_reward</code> callers (handful in daemon and TUI) to the new signature.</li>
+</ol></div><div class="el-h2"><h2 data-heading="Risks" dir="auto" class="heading" id="Risks_0"><span class="heading-collapse-indicator collapse-indicator collapse-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon right-triangle"><path d="M3 8L12 17L21 8"></path></svg></span>Risks</h2></div><div class="el-ul"><ul class="has-list-bullet">
+<li data-line="0" dir="auto"><span class="list-bullet"></span>The table assumes perfect adherence. Real users skip and snooze; effective time-to-99 will stretch. The contract is a <em>ceiling</em>, not the median experience.</li>
+<li data-line="1" dir="auto"><span class="list-bullet"></span>Tightened multipliers (0.6 / 1.0 / 1.4) change vibe — overdue used to feel like a comeback bonus; now it's softer. If the comeback feel matters, swap to 0.6 / 1.0 / 1.2 and lean on streaks elsewhere. One constant.</li>
+<li data-line="2" dir="auto"><span class="list-bullet"></span><code>sun</code> and <code>rest</code> (4hr cadence) pay ~720 XP per fire. That's a big toast magnitude. Consider whether daily-anchored reminders deserve distinctive toast styling so the number reads as intentional.</li>
+</ul></div><div class="el-h2"><h2 data-heading="Out of scope" dir="auto" class="heading" id="Out_of_scope_0"><span class="heading-collapse-indicator collapse-indicator collapse-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon right-triangle"><path d="M3 8L12 17L21 8"></path></svg></span>Out of scope</h2></div><div class="el-ul"><ul class="has-list-bullet">
+<li data-line="0" dir="auto"><span class="list-bullet"></span>Streak bonuses, time-of-day modifiers, anchor-hour bonuses (focus prestige is the only multiplier wired — see <a data-href="prestige-focus" href="08-specs/prestige-focus.html" class="internal-link" target="_self" rel="noopener nofollow">prestige-focus</a>).</li>
+<li data-line="1" dir="auto"><span class="list-bullet"></span>Asymmetric per-trait pacing. Uniform 1-year is the contract; revisit only after lived experience.</li>
+<li data-line="2" dir="auto"><span class="list-bullet"></span>Tier-table changes — <a data-href="tier-progression" href=".html" class="internal-link" target="_self" rel="noopener nofollow">tier-progression</a> is in level space and survives the rescale untouched.</li>
+<li data-line="3" dir="auto"><span class="list-bullet"></span>Reminder cadences themselves — they're the input to this contract, not the output. Cadence changes flow through <a data-href="reminder-lifecycle" href=".html" class="internal-link" target="_self" rel="noopener nofollow">reminder-lifecycle</a> and the per-trait pacing band test catches drift.</li>
+</ul></div><div class="el-h2"><h2 data-heading="See also" dir="auto" class="heading" id="See_also_0"><span class="heading-collapse-indicator collapse-indicator collapse-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon right-triangle"><path d="M3 8L12 17L21 8"></path></svg></span>See also</h2></div><div class="el-ul"><ul class="has-list-bullet">
+<li data-line="0" dir="auto"><span class="list-bullet"></span><a data-href="prestige-integrate" href="08-specs/prestige-integrate.html" class="internal-link" target="_self" rel="noopener nofollow">prestige-integrate</a> — per-trait reset to 1 with persistent visual enhancement</li>
+<li data-line="1" dir="auto"><span class="list-bullet"></span><a data-href="prestige-focus" href="08-specs/prestige-focus.html" class="internal-link" target="_self" rel="noopener nofollow">prestige-focus</a> — <code>tokens</code> currency that activates a 4× bonus phase</li>
+<li data-line="2" dir="auto"><span class="list-bullet"></span><a data-href="reminder-lifecycle" href=".html" class="internal-link" target="_self" rel="noopener nofollow">reminder-lifecycle</a> — the state machine that determines on-time / late / overdue</li>
+<li data-line="3" dir="auto"><span class="list-bullet"></span><a data-href="tier-progression" href=".html" class="internal-link" target="_self" rel="noopener nofollow">tier-progression</a> — total-level → tier mapping, unaffected by the curve rescale</li>
+<li data-line="4" dir="auto"><span class="list-bullet"></span><a data-href="cli-flags" href="02-references/cli-flags.html" class="internal-link" target="_self" rel="noopener nofollow">cli-flags</a> — daemon and TUI flags relevant to dev/test of XP behavior</li>
+</ul></div><div class="footer"><div class="data-bar"></div></div></div></div></div><div id="right-content" class="leaf" style="--sidebar-width: var(--sidebar-width-right);"><div id="right-sidebar" class="sidebar"><div class="sidebar-handle"></div><div class="sidebar-topbar"><div class="topbar-content"><label class="theme-toggle-container" for="theme-toggle-input" id=""><input class="theme-toggle-input" type="checkbox" id="theme-toggle-input"><div class="toggle-background"></div></label></div><div class="clickable-icon sidebar-collapse-icon"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><path d="M21 3H3C1.89543 3 1 3.89543 1 5V19C1 20.1046 1.89543 21 3 21H21C22.1046 21 23 20.1046 23 19V5C23 3.89543 22.1046 3 21 3Z"></path><path d="M10 4V20"></path><path d="M4 7H7"></path><path d="M4 10H7"></path><path d="M4 13H7"></path></svg></div></div><div class="sidebar-content-wrapper"><div id="right-sidebar-content" class="leaf-content"><div class="graph-view-wrapper"><div class="feature-header"><div class="feature-title">Interactive Graph</div></div><div class="graph-view-placeholder">
+		<div class="graph-view-container">
+			<div class="graph-icon graph-expand" role="button" aria-label="Expand" data-tooltip-position="top"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></div>
+			<div class="graph-icon graph-global" role="button" aria-label="Global Graph" data-tooltip-position="top"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-git-fork"><circle cx="12" cy="18" r="3"></circle><circle cx="6" cy="6" r="3"></circle><circle cx="18" cy="6" r="3"></circle><path d="M18 9v2c0 .6-.4 1-1 1H7c-.6 0-1-.4-1-1V9"></path><path d="M12 12v3"></path></svg></div>
+			<canvas id="graph-canvas" class="hide" width="512px" height="512px"></canvas>
+		</div>
+		</div></div><div id="outline" class=" tree-container"><div class="feature-header"><div class="feature-title">Table Of Contents</div><button class="clickable-icon nav-action-button tree-collapse-all" aria-label="Collapse All"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg></button></div><div class="tree-item" data-depth="1"><a class="tree-item-self is-clickable" href="08-specs/xp-pacing.html#xp-pacing_0" data-path="#xp-pacing_0"><div class="tree-item-inner heading-link" heading-name="xp-pacing">xp-pacing</div></a><div class="tree-item-children"></div></div><div class="tree-item mod-collapsible" data-depth="1"><a class="tree-item-self is-clickable mod-collapsible" href="08-specs/xp-pacing.html#XP_Pacing_Contract_0" data-path="#XP_Pacing_Contract_0"><div class="tree-item-icon collapse-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon right-triangle"><path d="M3 8L12 17L21 8"></path></svg></div><div class="tree-item-inner heading-link" heading-name="XP Pacing Contract">XP Pacing Contract</div></a><div class="tree-item-children"><div class="tree-item" data-depth="2"><a class="tree-item-self is-clickable" href="08-specs/xp-pacing.html#Problem_0" data-path="#Problem_0"><div class="tree-item-inner heading-link" heading-name="Problem">Problem</div></a><div class="tree-item-children"></div></div><div class="tree-item mod-collapsible" data-depth="2"><a class="tree-item-self is-clickable mod-collapsible" href="08-specs/xp-pacing.html#Contract_0" data-path="#Contract_0"><div class="tree-item-icon collapse-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon right-triangle"><path d="M3 8L12 17L21 8"></path></svg></div><div class="tree-item-inner heading-link" heading-name="Contract">Contract</div></a><div class="tree-item-children"><div class="tree-item" data-depth="3"><a class="tree-item-self is-clickable" href="08-specs/xp-pacing.html#Target_0" data-path="#Target_0"><div class="tree-item-inner heading-link" heading-name="Target">Target</div></a><div class="tree-item-children"></div></div><div class="tree-item" data-depth="3"><a class="tree-item-self is-clickable" href="08-specs/xp-pacing.html#Curve_scale_0" data-path="#Curve_scale_0"><div class="tree-item-inner heading-link" heading-name="Curve scale">Curve scale</div></a><div class="tree-item-children"></div></div><div class="tree-item" data-depth="3"><a class="tree-item-self is-clickable" href="08-specs/xp-pacing.html#Per-trait_daily_budget_0" data-path="#Per-trait_daily_budget_0"><div class="tree-item-inner heading-link" heading-name="Per-trait daily budget">Per-trait daily budget</div></a><div class="tree-item-children"></div></div><div class="tree-item" data-depth="3"><a class="tree-item-self is-clickable" href="08-specs/xp-pacing.html#Per-trait_pacing_bands_(XP/day)_0" data-path="#Per-trait_pacing_bands_(XP/day)_0"><div class="tree-item-inner heading-link" heading-name="Per-trait pacing bands (XP/day)">Per-trait pacing bands (XP/day)</div></a><div class="tree-item-children"></div></div><div class="tree-item" data-depth="3"><a class="tree-item-self is-clickable" href="08-specs/xp-pacing.html#Late_/_overdue_multipliers_0" data-path="#Late_/_overdue_multipliers_0"><div class="tree-item-inner heading-link" heading-name="Late / overdue multipliers">Late / overdue multipliers</div></a><div class="tree-item-children"></div></div></div></div><div class="tree-item" data-depth="2"><a class="tree-item-self is-clickable" href="08-specs/xp-pacing.html#Per-reminder_XP_rewards_0" data-path="#Per-reminder_XP_rewards_0"><div class="tree-item-inner heading-link" heading-name="Per-reminder XP rewards">Per-reminder XP rewards</div></a><div class="tree-item-children"></div></div><div class="tree-item" data-depth="2"><a class="tree-item-self is-clickable" href="08-specs/xp-pacing.html#Implementation_order_0" data-path="#Implementation_order_0"><div class="tree-item-inner heading-link" heading-name="Implementation order">Implementation order</div></a><div class="tree-item-children"></div></div><div class="tree-item" data-depth="2"><a class="tree-item-self is-clickable" href="08-specs/xp-pacing.html#Risks_0" data-path="#Risks_0"><div class="tree-item-inner heading-link" heading-name="Risks">Risks</div></a><div class="tree-item-children"></div></div><div class="tree-item" data-depth="2"><a class="tree-item-self is-clickable" href="08-specs/xp-pacing.html#Out_of_scope_0" data-path="#Out_of_scope_0"><div class="tree-item-inner heading-link" heading-name="Out of scope">Out of scope</div></a><div class="tree-item-children"></div></div><div class="tree-item" data-depth="2"><a class="tree-item-self is-clickable" href="08-specs/xp-pacing.html#See_also_0" data-path="#See_also_0"><div class="tree-item-inner heading-link" heading-name="See also">See also</div></a><div class="tree-item-children"></div></div></div></div></div></div></div><script defer="">let rs = document.querySelector("#right-sidebar"); rs.classList.toggle("is-collapsed", window.innerWidth < 768); rs.style.setProperty("--sidebar-width", localStorage.getItem("sidebar-right-width"));</script></div></div></div></div></body></html>

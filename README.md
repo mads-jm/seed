@@ -1,214 +1,172 @@
-# Seed
+# seed
 
-A terminal-native wellness companion that turns the small acts of taking care of yourself into a game you can see. Keyboard-first, offline-first, no account, no cloud. Built alongside [pour](https://pour.madigan.app/) — same ethos, different surface.
-
-> __Status:__ pre-v0. `seed-core` (domain, events, levels, config) is landing; `seedd` and `seed` binaries are still stubs. The backlog in [`docs/backlog.md`](docs/backlog.md) is the canonical plan.
+A local-first TUI wellness companion. Reminders you type. A mandala that grows with your care.
 
 ## Why
 
-We don't drink enough water. We don't stand up. We forget to look out the window. Not because we don't want to — because the friction of remembering, tracking, and caring about it slowly burns out.
+We don't drink enough water. We don't stand up. We forget to look out the window. Not because we don't want to — because the friction of remembering slowly burns out the impulse before we act on it.
 
-Seed is a companion that notices for you. A background daemon nudges at the right moments. A TUI shows a living glyph — a mandala that grows more intricate as you live better. Each reminder you answer pours XP into one of nine traits. At zenith (all traits ≥ 0.97) the glyph shimmers.
+Seed takes the energy of a progression game and turns it into something that cares about you. A background daemon tracks nine wellness traits — hydration, nourishment, movement, posture, vision, breath, rest, presence, alignment — and nudges at the right moments. In the terminal, a living mandala unfolds as you respond. Each reminder you answer pours XP into a trait. The glyph reflects that back.
 
-The care is the reward loop. The glyph is the proof.
+The companion should grow, mature, change, evolve endlessly based on your success. At level 1 it's a sparse seed. At level 99 across all nine traits it shimmers at zenith. The care is the reward loop. The glyph is the proof.
 
-```
-seed              # open the companion TUI
-seed init         # scaffold ~/.seed/ with an annotated config
-seed water        # log a glass of water from the CLI
-seed stretch      # log a stretch
-seedd             # the daemon — spawns automatically if absent
-```
+## What you get
+
+- Background daemon (`seedd`) that tracks reminders and fires OS notifications
+- Terminal UI (`seed`) with a generative mandala that evolves with 9 wellness traits: flow, core, spine, reach, clarity, space, depth, resonance, warmth
+- Type the action word to log a reminder. mandala grows. levels rise.
+- Local-first. No cloud. State at `~/.seed/`. Event-log shaped so a future p2p sync layer can wrap without a rewrite.
+- Cosmetic palettes (sage / dusk / mist / ember / moss), OSRS-style XP progression (1-99, lvl 92 ≈ halfway), SEED → ZENITH tier progression
 
 ## Install
 
-> No prebuilt binaries yet — v0 is still in progress. For now, build from source.
+From source (only install method at v0):
 
-**From source**:
-
-```bash
-git clone https://github.com/mads-jm/seed
+```
+git clone <this repo>
 cd seed
 cargo build --release
-# Binaries:
-#   target/release/seed   (TUI)
-#   target/release/seedd  (daemon)
 ```
+
+Binaries land in `target/release/`:
+- `seed` — the TUI
+- `seedd` — the daemon (auto-spawned by `seed` if not running)
 
 Requires Rust 2024 edition (pinned via `rust-toolchain.toml`). No other system dependencies.
 
-Linux desktop notifications require a running notification daemon (most DEs have one). macOS and Windows use their native notification center via `notify-rust`.
+Linux desktop notifications require a running notification daemon (most DEs ship one). macOS and Windows use their native notification center via `notify-rust`.
 
-## Quick Start
+## Quickstart
 
-**1. Initialize**
-
-```bash
-seed init
+```
+seed init     # scaffold ~/.seed/config.toml
+seed          # launch the TUI (auto-spawns seedd in the background)
 ```
 
-`seed init` scaffolds `~/.seed/` with an annotated `config.toml`. Run this once before first use. All Seed state lives under `~/.seed/` (override with `SEED_HOME`).
+First run: the mandala appears as a sparse seed. Type `water` + Enter. Watch the flow trait XP tick up. Do the same across the 9 traits over time and the mandala unfolds.
+
+## Commands
+
+- `<verb> <Enter>` — log a reminder: `water`, `eat`, `stand`, `walk`, `stretch`, `look`, `breathe`, `rest`, `align`
+- `/<trait> <level>` — debug: set a trait to any level 1-99 (e.g. `/flow 50`)
+- `help` — command reference
+- `/` — focus the command bar
+- `Tab` / `Shift+Tab` — cycle side panel tabs (LIST / LEVELS / LOG)
+- `q` — quit
+
+### Dev mode
+
+Launch with `--dev` (or `SEED_DEV=1`) to expose an extra side-panel tab:
+
+```
+seed --dev
+```
+
+The **TWEAKS** tab adds a palette selector, manual reminder trigger, and state reset — useful while iterating, but gated behind a flag so everyday use stays driven by reminders alone. There is no default hotkey for this tab; it's reached via `Tab` like the others once enabled.
+
+## Config
+
+Everything lives at `~/.seed/` (override with `SEED_HOME`):
 
 ```
 ~/.seed/
-  config.toml        # your overrides — everything is optional
-  events.jsonl       # append-only event log (source of truth)
-  snapshot.json      # periodic rollup for fast daemon startup
-  seedd.sock         # Unix socket (Windows: \\.\pipe\seedd-<user>)
-  seedd.log          # daemon log (rotated)
-  seed.log           # TUI log (suppressed below WARN unless SEED_LOG=debug)
+  config.toml       # edit me
+  events.jsonl      # append-only reminder log
+  snapshot.json     # periodic state snapshot
+  seedd.log         # daemon logs (daily-rotated)
+  seed.log          # TUI logs
 ```
 
-**2. Launch the companion**
-
-```bash
-seed
-```
-
-The TUI auto-spawns `seedd` in the background if it isn't already running, connects over a local socket, and subscribes to state updates. Close it with `q` — the daemon keeps running so you still get notifications.
-
-**3. Log actions**
-
-From inside the TUI, type into the command bar at the bottom:
-
-```
-water      # hydration
-eat        # meal
-stand      # get up
-walk       # a walk
-stretch    # stretch
-look       # 20-20-20 eye break
-breathe    # breathwork
-rest       # screen break
-align      # posture / alignment
-```
-
-Each action answers the currently-due reminder for that category, emits a `seed.reminder.completed` event, and pours XP into the relevant trait. A toast confirms the gain; the glyph responds.
-
-Debug bump for a single trait: `/flow 50`.
-
-## Config Overview
-
-`~/.seed/config.toml` is optional — built-in defaults match the original prototype. Override only what you want to change:
+`config.toml` example (copy from the scaffold — run `seed init` first):
 
 ```toml
-config_version = "0.1.0"
+# seed configuration
+# All keys are optional — omit any line to keep the default.
 
-# Don't nag outside these hours
+# Hours during which notifications are active (24-hour clock).
 active_hours = [7, 22]
 
-# Default snooze duration (minutes) when you defer a reminder
-snooze_min = 30
+# Default snooze duration in minutes.
+snooze_min = 5
 
-# Palette: sage | dusk | mist | ember | moss
+# Colour palette: sage | dusk | mist | ember | moss
 palette = "sage"
 
-# Notification style: silent | subtle | standard | alert
-notif_style = "standard"
+# Notification style: standard | flash | silent
+notif_style = "flash"
 
-# Per-reminder overrides (anything missing falls through to the baked-in default)
-[reminders.water]
-interval_min = 45      # default 60
-pinned = true          # stick this reminder into the orbit
+# Deterministic seed for glyph generation.
+glyph_seed = 42
 
-[reminders.stretch]
-enabled = false        # turn off entirely
+# Per-reminder overrides. Omit any section to use the default.
+# [reminders.water]
+# interval_min = 45
+# enabled = true
 ```
 
-### Reminders and categories
+Key fields:
+- `active_hours = [7, 22]` — notifications fire only between 7am and 10pm
+- `snooze_min = 5` — default snooze duration
+- `palette = "sage"` — one of sage / dusk / mist / ember / moss
+- `[reminders.water]` — per-reminder override of `interval_min` and `enabled`
 
-Nine categories, twenty reminders, baked into `seed-core`. Categories cover hydration, nourishment, movement, posture, vision, breath, rest, presence, and journaling. Each reminder has a baseline interval and an anchor hour; the daemon rolls them through `Dormant → Due → Overdue` and fires at most one OS notification per due window.
+## Terminal compatibility
 
-### State, events, replay
+seed renders with braille + truecolor by default. On terminals that don't support them:
 
-The daemon owns an in-memory `State` hydrated at startup from `snapshot.json` + a tail of `events.jsonl`. Every user action — complete, snooze, pin, enable, disable — becomes an event appended to the log (fsynced, one-per-line JSON with a versioned envelope):
+- Braille: set `SEED_FORCE_ASCII=1` to swap the glyph's inner core to block characters
+- Truecolor: set `SEED_FORCE_256=1` to quantize to the 256-color cube
 
-```jsonl
-{"v":1,"ts":"2026-04-22T09:12:03Z","kind":"seed.reminder.completed","data":{"id":"water"}}
-{"v":1,"ts":"2026-04-22T09:12:03Z","kind":"seed.trait.xp_changed","data":{"trait":"flow","delta":12}}
-```
+Tested on: Windows Terminal, iTerm2, kitty, wezterm, alacritty.
 
-The log is the source of truth. Delete `snapshot.json` at any time — the next daemon start will re-fold from events.
+## Troubleshooting
 
-## Architecture
+**Stopping the daemon on Windows.** `seed` auto-spawns `seedd` as a detached process. Closing the TUI does not stop it (by design — you still get notifications). To stop it manually: `taskkill /IM seedd.exe /F` in a shell, or end it from Task Manager.
 
-Three crates in one Cargo workspace:
+**Glyph appears empty on cold start.** `seed` connects to the daemon and waits up to 3 seconds for the initial state snapshot. On slow disks or with antivirus scanning, the daemon may take a moment to start. The glyph will fill in when the snapshot arrives; any commands typed in the interim are safe.
 
-| Crate         | Bin    | Role |
-|---------------|--------|------|
-| `seed-core`   | —      | Pure domain: categories, reminders, XP curve, tiers, events, state fold, glyph renderer, config parser. No I/O — the clock is an argument. |
-| `seed-daemon` | `seedd` | Owns the canonical state, writes `events.jsonl`, schedules reminders, fires OS notifications, serves an IPC socket. |
-| `seed-tui`    | `seed`  | Ratatui client. Connects to `seedd`, mirrors state via event diffs, renders the glyph + orbit + side panel, sends user actions back as requests. |
+**No notifications despite being in active hours.** Check that `active_hours` in `config.toml` is set correctly (e.g. `active_hours = [7, 22]`). A zero-length window like `[7, 7]` silently disables all notifications — the config loader rejects this with a clear error.
 
-IPC is a local Unix socket (`~/.seed/seedd.sock`) or a Windows named pipe (`\\.\pipe\seedd-<user>`), length-prefixed JSON framing via `interprocess`. Single-instance lock on the daemon. Auto-reconnect with backoff on the client.
+**Daemon disconnects during a session.** The TUI auto-reconnects with exponential backoff (200ms → 5s cap). Commands sent while disconnected are lost — the status bar will show reconnecting. If the glyph freezes and commands have no effect, check `~/.seed/seedd.log`.
 
-## The Glyph
+## Pour integration
 
-The mandala is the heart of the surface. It renders into a ratatui `Buffer` at the native terminal resolution using layered character sets:
+`seed` is a sibling to [pour](https://github.com/mads-jm/pour) — a terminal capture tool. A future pour module will tail `~/.seed/events.jsonl` to pour structured reminder entries into your Obsidian vault. v0 exposes the event schema (see `seed - docs/02 references/events-schema.md`) but ships no coupling. Either project works standalone.
 
-- **Braille** (`⠀`–`⣿`) for sub-cell density in the inner core
-- **Block + half-block** (`░▒▓█▀▄▌▐▖▗▘▙▚▛▜▝▞▟`) for outer petals and aura rings
-- **Box-drawing** for structural spokes
-- **Per-cell truecolor** (24-bit RGB, with 256-color and 16-color fallbacks probed at startup)
-- Multi-trait hue blending (warm core / cool flow / accent rings / violet depth)
-- Deterministic from `(traits, seed)`; per-frame shimmer at zenith
+## Tech stack
 
-Nine traits mapped onto nine structural layers. Level norm weights each layer's density. The glyph is the single visible consequence of your life — a reflection, not a score.
-
-## Pour Integration
-
-Seed and [pour](https://pour.madigan.app/) share a philosophy (write more... pour / care more... seed) and will share a data surface.
-
-v0 defers integration but keeps the door open:
-
-- `events.jsonl` uses a versioned envelope and `seed.*`-namespaced `kind` strings
-- Pour can tail the log and write a daily-note row per `seed.reminder.completed` without either project needing to depend on the other
-- `SEED_HOME` and `POUR_HOME` are siblings by convention
-
-Full design: [`docs/events-schema.md`](docs/events-schema.md) (forthcoming).
-
-## Tech Stack
-
-| Area            | Crate |
-|-----------------|-------|
-| TUI             | `ratatui` + `crossterm` |
-| Async runtime   | `tokio` |
-| IPC             | `interprocess` (local socket / Windows named pipe) |
-| OS notifications| `notify-rust` |
-| Serialization   | `serde` + `serde_json` + `toml` + `toml_edit` |
-| Time            | `chrono` |
-| Logging         | `tracing` + `tracing-subscriber` + `tracing-appender` |
-| Unicode         | `unicode-width` |
-| Paths           | `dirs` |
+| Area          | Crate                                      |
+|---------------|--------------------------------------------|
+| TUI           | `ratatui` + `crossterm`                    |
+| IPC           | `interprocess` (local socket / named pipe) + length-prefixed JSON |
+| Async         | `tokio`                                    |
+| Serialization | `serde` + `serde_json` + `toml`            |
+| Notifications | `notify-rust`                              |
+| Time          | `chrono`                                   |
+| Logging       | `tracing` + `tracing-appender`             |
 
 ## Development
 
-```bash
+```
 cargo build --workspace
 cargo test --workspace
 cargo clippy --workspace -- -D warnings
-cargo fmt --all -- --check
+cargo fmt --all
 ```
 
 Run the daemon in the foreground with verbose logging:
 
-```bash
-SEED_LOG=debug cargo run -p seed-daemon -- --foreground
+```
+SEED_LOG=debug cargo run --bin seedd -- --foreground
 ```
 
-Point a whole session at a throwaway state directory:
+Run the smoke test (spawns a real daemon process):
 
-```bash
-SEED_HOME=$(mktemp -d) cargo run -p seed-tui
+```
+cargo test --test smoke -- --ignored
 ```
 
-Tests use `tempfile` for `SEED_HOME`, `pretty_assertions` for diffs, and golden-file snapshots for the glyph renderer. Keep them pure — the daemon's scheduler takes an injected clock.
-
-## Documentation
-
-- [`docs/backlog.md`](docs/backlog.md) — v0 MVP backlog (locked decisions, tasks, execution waves)
-- [`docs/build-log/`](docs/build-log/) — per-milestone execution records (scope, shipped, deferrals)
-- [`seed - docs/`](seed%20-%20docs/index.md) — Obsidian vault (concepts, architecture, ADRs, stories)
+Full docs in the Obsidian vault at `seed - docs/`. Wave-by-wave build logs in `seed - docs/05 notes/build-log-*.md`; consolidated v0 plan in `seed - docs/09 milestones/v0-mvp.md`; active backlog in `seed - docs/00 index/BACKLOG.kanban.md` (board) and `seed - docs/08 specs/v0-1-0-punch-list.md` (prose). The `docs/` directory at the project root is the GitHub Pages export target — build output, not source.
 
 ## License
 

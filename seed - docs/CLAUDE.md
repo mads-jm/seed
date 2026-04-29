@@ -1,3 +1,8 @@
+---
+date created: Thursday, April 23rd 2026, 4:37:36 am
+date modified: Wednesday, April 29th 2026, 7:53:24 am
+---
+
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
@@ -70,3 +75,7 @@ The export path is configured to point at the project root's `docs/` directory.
 - Don't create numbered directories outside the canonical set without updating `lib/common.sh` in the template repo
 - Don't delete `.gitkeep` files — they preserve empty directory structure in git
 - Don't manually edit `.base` files — these are Obsidian-managed binary-ish JSON for database views
+
+
+
+

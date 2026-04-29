@@ -1,4 +1,8 @@
-# seed Documentation Vault
+---
+date created: Thursday, April 23rd 2026, 5:38:01 am
+date modified: Wednesday, April 29th 2026, 7:53:30 am
+---
+# Seed Documentation Vault
 
 This is an [Obsidian](https://obsidian.md) vault containing all project documentation. It follows a numbered Zettelkasten-inspired directory structure for consistent knowledge organization.
 
