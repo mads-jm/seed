@@ -1,0 +1,33 @@
+[package]
+name = "seed-daemon"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+name = "seed_daemon"
+path = "src/lib.rs"
+
+[[bin]]
+name = "seedd"
+path = "src/main.rs"
+
+[dependencies]
+seed-core = { path = "../seed-core" }
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
+dirs.workspace = true
+tokio.workspace = true
+interprocess.workspace = true
+notify-rust.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+tracing-appender.workspace = true
+async-trait.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+pretty_assertions.workspace = true
