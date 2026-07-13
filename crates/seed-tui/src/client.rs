@@ -171,21 +171,22 @@ impl IpcClient {
             return Ok(client);
         }
 
-        // No daemon found — spawn seedd detached.
-        info!("no daemon found; spawning seedd");
-        spawn_daemon(seed_home)?;
-
-        // Poll up to 2s in 200ms increments.
-        let deadline = tokio::time::Instant::now() + Duration::from_secs(2);
-        loop {
-            sleep(Duration::from_millis(200)).await;
-            if let Ok(client) = Self::try_connect().await {
-                return Ok(client);
-            }
-            if tokio::time::Instant::now() >= deadline {
-                bail!("daemon did not start within 2 seconds");
+        // No daemon reachable — spawn and wait via the shared helper, then
+        // establish the channel-based client. Retry the connect briefly: the
+        // daemon answered Ping, but guard against a transient gap between the
+        // readiness probe and this connect.
+        ensure_daemon_ready(seed_home).await?;
+        let mut last_err = None;
+        for _ in 0..10 {
+            match Self::try_connect().await {
+                Ok(client) => return Ok(client),
+                Err(e) => {
+                    last_err = Some(e);
+                    sleep(Duration::from_millis(200)).await;
+                }
             }
         }
+        Err(last_err.expect("loop runs at least once"))
     }
 
     async fn try_connect() -> Result<Self> {
@@ -374,6 +375,84 @@ fn socket_name() -> Result<interprocess::local_socket::Name<'static>> {
         let pipe = format!("seed-daemon-{username}");
         pipe.to_ns_name::<GenericNamespaced>()
             .context("failed to build pipe name")
+    }
+}
+
+/// Probe the daemon socket with a single `Ping`, returning `true` if a live
+/// daemon answers `Pong` within 1s. Mirrors `seed-daemon::ipc::probe_existing`.
+async fn probe_ready() -> bool {
+    let name = match socket_name() {
+        Ok(n) => n,
+        Err(_) => return false,
+    };
+    use interprocess::local_socket::tokio::Stream;
+    let conn = match Stream::connect(name).await {
+        Ok(c) => c,
+        Err(_) => return false,
+    };
+    let (rd, mut wr) = tokio::io::split(conn);
+    let mut rd = BufReader::new(rd);
+    if write_frame(&mut wr, &Message::Ping).await.is_err() {
+        return false;
+    }
+    matches!(
+        tokio::time::timeout(Duration::from_secs(1), read_frame(&mut rd)).await,
+        Ok(Ok(Some(Message::Pong)))
+    )
+}
+
+/// Ensure a daemon is reachable: probe the socket, and if none answers, spawn
+/// `seedd` and poll (200ms increments, up to 2s) until it responds to `Ping`.
+///
+/// Shared by the TUI launch (`connect_or_spawn`) and the headless `seed log`
+/// path so the probe→spawn→wait-for-ready logic lives in exactly one place.
+/// Errors only if the spawn itself fails or the daemon never becomes ready.
+pub async fn ensure_daemon_ready(seed_home: &Path) -> Result<()> {
+    if probe_ready().await {
+        return Ok(());
+    }
+
+    info!("no daemon reachable; spawning seedd");
+    spawn_daemon(seed_home)?;
+
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(2);
+    loop {
+        sleep(Duration::from_millis(200)).await;
+        if probe_ready().await {
+            return Ok(());
+        }
+        if tokio::time::Instant::now() >= deadline {
+            bail!("daemon did not start within 2 seconds");
+        }
+    }
+}
+
+/// Send a single `Action` to the daemon and return its `ResponseResult`.
+///
+/// One request/response round-trip on a fresh connection: no `Subscribe`, no
+/// `StateDiff` stream. Intended for headless one-shot subcommands (`seed log`,
+/// and later `seed presence`) that mutate via an `Action` and read one reply.
+/// The daemon remains the sole writer; this only sends the action and reads the
+/// diff the daemon reports back.
+pub async fn request_once(action: Action) -> Result<ResponseResult> {
+    let name = socket_name()?;
+    use interprocess::local_socket::tokio::Stream;
+    let conn = Stream::connect(name)
+        .await
+        .context("connect to daemon socket")?;
+    let (rd, mut wr) = tokio::io::split(conn);
+    let mut rd = BufReader::new(rd);
+
+    let request = Message::Request { id: 1, action };
+    write_frame(&mut wr, &request).await?;
+
+    // Read frames until our Response arrives (the daemon may send Hello first).
+    loop {
+        match read_frame(&mut rd).await? {
+            Some(Message::Response { id: 1, result }) => return Ok(result),
+            Some(_other) => continue,
+            None => bail!("daemon closed connection before responding"),
+        }
     }
 }
 
