@@ -86,28 +86,20 @@ impl TweaksPanelState {
             }
             // Left / Right navigate the focused row.
             KeyCode::Left => match self.focus {
-                TweaksFocus::Palette => {
-                    if self.palette_idx > 0 {
-                        self.palette_idx -= 1;
-                    }
+                TweaksFocus::Palette if self.palette_idx > 0 => {
+                    self.palette_idx -= 1;
                 }
-                TweaksFocus::XpMultiplier => {
-                    if self.xp_multiplier_idx > 0 {
-                        self.xp_multiplier_idx -= 1;
-                    }
+                TweaksFocus::XpMultiplier if self.xp_multiplier_idx > 0 => {
+                    self.xp_multiplier_idx -= 1;
                 }
                 _ => {}
             },
             KeyCode::Right => match self.focus {
-                TweaksFocus::Palette => {
-                    if self.palette_idx + 1 < PALETTES.len() {
-                        self.palette_idx += 1;
-                    }
+                TweaksFocus::Palette if self.palette_idx + 1 < PALETTES.len() => {
+                    self.palette_idx += 1;
                 }
-                TweaksFocus::XpMultiplier => {
-                    if self.xp_multiplier_idx + 1 < XP_MULTIPLIERS.len() {
-                        self.xp_multiplier_idx += 1;
-                    }
+                TweaksFocus::XpMultiplier if self.xp_multiplier_idx + 1 < XP_MULTIPLIERS.len() => {
+                    self.xp_multiplier_idx += 1;
                 }
                 _ => {}
             },
