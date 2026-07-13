@@ -747,7 +747,7 @@ pub fn render_glyph(traits: &TraitMap, seed: u64, target: (u16, u16)) -> GlyphFr
 
     // Macro tendrils: sparser echoes beyond main arms (fractal macro scale).
     if reach > 0.45 {
-        let macro_count = ((arm_count as f32 * 0.6).round() as usize).max(0);
+        let macro_count = (arm_count as f32 * 0.6).round() as usize;
         let macro_len = arm_len * 1.8;
         for i in 0..macro_count {
             let a = (i as f32 / macro_count.max(1) as f32) * std::f32::consts::TAU

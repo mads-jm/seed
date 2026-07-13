@@ -275,13 +275,17 @@ impl Daemon {
                 let events = self.build_complete_events(&reminder_id, now_ms).await;
                 match events {
                     Ok(evs) => {
+                        // Compute the structured XP/level diff for the completed
+                        // trait BEFORE committing (the events carry old/new XP).
+                        // Populates the previously-Null `ResponseResult::Ok.value`
+                        // so headless `seed log` can report progress without the TUI.
+                        let value = complete_diff_value(&evs);
                         self.commit(evs).await?;
-                        self.send_response(
-                            resp_tx,
-                            request_id,
-                            ResponseResult::ok(serde_json::Value::Null),
-                        )
-                        .await;
+                        let result = match value {
+                            Some(v) => ResponseResult::ok(v),
+                            None => ResponseResult::err("completion produced no XP diff"),
+                        };
+                        self.send_response(resp_tx, request_id, result).await;
                     }
                     Err(e) => {
                         self.send_response(resp_tx, request_id, ResponseResult::err(e.to_string()))
@@ -928,6 +932,43 @@ impl Daemon {
     }
 }
 
+/// Build the structured XP/level diff for a completed reminder from its emitted
+/// events. Returns `Value::Null` if no `ReminderCompleted` event is present
+/// (shouldn't happen for a successful completion, but stays graceful).
+///
+/// The `ReminderCompleted` event carries `trait_id`, `xp_gained`, and `new_xp`;
+/// `old_xp = new_xp - xp_gained`, and levels are derived via `level_for_xp`. This
+/// is the daemon *reporting* a diff it already computed — the daemon remains the
+/// sole writer. The shape is a stable contract consumed by `seed log --json`:
+/// `{ trait, old_xp, new_xp, old_level, new_level, xp_delta }`.
+///
+/// Returns `None` when the batch carries no `ReminderCompleted` event; the
+/// caller turns that into an `Err` response rather than emitting a null diff.
+fn complete_diff_value(events: &[Event]) -> Option<serde_json::Value> {
+    use seed_core::levels::level_for_xp;
+
+    for ev in events {
+        if let Event::ReminderCompleted {
+            trait_id,
+            xp_gained,
+            new_xp,
+            ..
+        } = ev
+        {
+            let old_xp = new_xp.saturating_sub(*xp_gained as u64);
+            return Some(serde_json::json!({
+                "trait": trait_id.0,
+                "old_xp": old_xp,
+                "new_xp": new_xp,
+                "old_level": level_for_xp(old_xp),
+                "new_level": level_for_xp(*new_xp),
+                "xp_delta": xp_gained,
+            }));
+        }
+    }
+    None
+}
+
 // ---------------------------------------------------------------------------
 // Unit tests for prestige action handlers
 // ---------------------------------------------------------------------------
@@ -990,6 +1031,50 @@ mod tests {
 
     fn flow_id() -> TraitId {
         TraitId("flow".into())
+    }
+
+    // -----------------------------------------------------------------------
+    // Complete response diff (TASK-014: enriched Complete response)
+    // -----------------------------------------------------------------------
+
+    #[tokio::test]
+    async fn complete_response_carries_xp_level_diff() {
+        // Start flow at level 34 so a single water completion (145 XP) is a
+        // meaningful, level-detectable diff.
+        let mut state = initial_state(0);
+        *state.traits.get_mut(&flow_id()).unwrap() = xp_for_level(34);
+        let old_xp = xp_for_level(34);
+
+        let mut daemon = make_daemon(state).await;
+
+        let result = send_action(
+            &mut daemon,
+            Action::Complete {
+                reminder_id: ReminderId("water".into()),
+            },
+        )
+        .await;
+
+        let value = match result {
+            ResponseResult::Ok { value } => value,
+            other => panic!("expected Ok with diff, got {other:?}"),
+        };
+
+        assert_eq!(value.get("trait").and_then(|v| v.as_str()), Some("flow"));
+        assert_eq!(value.get("old_xp").and_then(|v| v.as_u64()), Some(old_xp));
+        assert_eq!(
+            value.get("old_level").and_then(|v| v.as_u64()),
+            Some(34),
+            "old_level should reflect pre-completion state"
+        );
+        // xp_delta must be positive and new_xp == old_xp + xp_delta.
+        let xp_delta = value.get("xp_delta").and_then(|v| v.as_u64()).unwrap();
+        let new_xp = value.get("new_xp").and_then(|v| v.as_u64()).unwrap();
+        assert!(xp_delta > 0, "completion should grant XP");
+        assert_eq!(new_xp, old_xp + xp_delta);
+        // new_level present and >= old_level.
+        let new_level = value.get("new_level").and_then(|v| v.as_u64()).unwrap();
+        assert!(new_level >= 34);
     }
 
     // -----------------------------------------------------------------------

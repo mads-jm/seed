@@ -15,6 +15,7 @@ mod client;
 mod command;
 mod init;
 mod input;
+mod logcmd;
 mod palette;
 mod prestige;
 mod term;
@@ -74,8 +75,16 @@ async fn main() -> Result<()> {
     }));
 
     // ── Subcommands ──────────────────────────────────────────────────────────
-    if args.get(1).map(|s| s.as_str()) == Some("init") {
-        return init::run_init(&seed_home);
+    // Each headless subcommand handles its own connect/spawn and exits without
+    // launching the TUI. The seam here (match on args[1]) is where a sibling
+    // `presence` subcommand will slot in, reusing client::request_once.
+    match args.get(1).map(|s| s.as_str()) {
+        Some("init") => return init::run_init(&seed_home),
+        Some("log") => {
+            let code = logcmd::run(&seed_home, &args).await?;
+            std::process::exit(code);
+        }
+        _ => {}
     }
 
     // ── Full TUI ─────────────────────────────────────────────────────────────
@@ -90,6 +99,8 @@ Wellness companion TUI
 USAGE:
   seed              Launch the TUI (connects to seedd daemon)
   seed init         Scaffold ~/.seed/config.toml
+  seed log <verb>   Log a completion headlessly (no TUI); auto-spawns seedd.
+                    Add --json for a machine-readable XP/level diff.
   seed --version    Print version
   seed --help       Print this help
 

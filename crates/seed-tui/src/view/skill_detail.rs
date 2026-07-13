@@ -58,15 +58,11 @@ impl SkillDetailState {
         match key.code {
             KeyCode::Esc => return Some(SkillDetailAction::Close),
 
-            KeyCode::Up => {
-                if self.focus_idx > 0 {
-                    self.focus_idx -= 1;
-                }
+            KeyCode::Up if self.focus_idx > 0 => {
+                self.focus_idx -= 1;
             }
-            KeyCode::Down => {
-                if rem_count > 0 && self.focus_idx + 1 < rem_count {
-                    self.focus_idx += 1;
-                }
+            KeyCode::Down if rem_count > 0 && self.focus_idx + 1 < rem_count => {
+                self.focus_idx += 1;
             }
 
             KeyCode::Left | KeyCode::Char('<') => {

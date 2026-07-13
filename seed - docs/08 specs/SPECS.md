@@ -20,6 +20,7 @@ Feature and component specifications.
 ## Scheduling / Lifecycle
 
 - [[overdue-rollover]] — bound `Overdue` at 2×I; auto-skip restores Dormant, gate XP drain by active hours
+- [[presence-grace]] — (draft, v0.2.0) injected presence signal makes absence penalty-free: away time rolls reminders forward with no streak break, no missed count, no drain
 
 ## Rendering
 
