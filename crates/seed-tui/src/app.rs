@@ -204,6 +204,36 @@ impl App {
         Ok(())
     }
 
+    /// Build an App wired to a dummy in-memory IPC client, for testing the
+    /// state-mirror / toast logic without a live terminal or daemon.
+    #[cfg(test)]
+    fn new_for_test(state: State) -> Self {
+        use tokio::sync::mpsc;
+        let (outbound, _out_rx) = mpsc::channel::<Message>(8);
+        let (_in_tx, inbound) = mpsc::channel::<Message>(8);
+        App {
+            state,
+            config: Config::default(),
+            side_tab: SideTab::default(),
+            command: String::new(),
+            toast: None,
+            tweaks_open: false,
+            tweaks_state: TweaksPanelState::default(),
+            tick: 0,
+            client: IpcClient { outbound, inbound },
+            should_quit: false,
+            truecolor: false,
+            braille: false,
+            seed_home: PathBuf::from("/tmp/seed-test"),
+            next_req_id: 2,
+            side_selection: SideSelection::default(),
+            skill_detail: None,
+            prestige_modal: PrestigeModal::None,
+            list_viewport_h: 0,
+            levels_viewport_h: 0,
+        }
+    }
+
     /// Render the full frame.
     fn render(&mut self, f: &mut ratatui::Frame) {
         let area = f.area();
@@ -1215,8 +1245,15 @@ impl App {
                 debug!("snapshot applied");
             }
             Message::StateDiff { events } => {
+                // Tier crossings are the headline moment: if this batch carries a
+                // TierChanged, the tier-up toast wins the single slot and the
+                // co-occurring level-up is suppressed. Scoped to the batch so it
+                // never depends on a stale toast lingering from a prior batch.
+                let tier_up_in_batch = events
+                    .iter()
+                    .any(|e| e.kind == "seed.companion.tier_changed");
                 for env in events {
-                    self.apply_envelope(env);
+                    self.apply_envelope(env, tier_up_in_batch);
                 }
             }
             Message::Response { id: _, result } => {
@@ -1230,11 +1267,9 @@ impl App {
         }
     }
 
-    fn apply_envelope(&mut self, env: EventEnvelope) {
-        match serde_json::from_value::<CoreEvent>(serde_json::json!({
-            "kind": env.kind,
-            "data": env.data,
-        })) {
+    fn apply_envelope(&mut self, env: EventEnvelope, tier_up_in_batch: bool) {
+        let kind = env.kind.clone();
+        match seed_core::events::from_envelope(env) {
             Ok(event) => {
                 let prev_level: std::collections::BTreeMap<_, _> = self
                     .state
@@ -1245,11 +1280,25 @@ impl App {
 
                 apply_event(&mut self.state, &event);
 
-                // Check for level-up toast.
+                // Tier crossings are macro-celebration moments and always coincide
+                // with a level-up. When the daemon emits a TierChanged, it wins the
+                // single toast slot over the LevelUp raised for the same batch.
+                if let CoreEvent::TierChanged { to, .. } = &event {
+                    self.toast = Some(Toast::tier_up(
+                        format!("TIER {} · {}", to.name(), to.adj()),
+                        self.tick,
+                    ));
+                }
+
+                // Level-up toast, derived from the XP change. Suppressed when this
+                // batch also carries a tier crossing: tier-up supersedes the
+                // co-occurring level-up for the single toast slot, regardless of the
+                // order the two events arrive within the batch.
                 for (trait_id, &new_xp) in &self.state.traits {
                     let new_level = level_for_xp(new_xp);
                     if let Some(&old_level) = prev_level.get(trait_id)
                         && new_level > old_level
+                        && !tier_up_in_batch
                     {
                         self.toast = Some(Toast::level_up(
                             format!("{} · LVL {}", trait_id.0.to_uppercase(), new_level),
@@ -1288,7 +1337,10 @@ impl App {
                 }
             }
             Err(e) => {
-                debug!("unknown event kind '{}': {e}", env.kind);
+                // `from_envelope` routes unknown kinds to Event::Unknown (a no-op
+                // in apply_event), so an Err here means a *known* kind with malformed
+                // data — skip it rather than crash the batch.
+                debug!("malformed event kind '{kind}': {e}");
             }
         }
     }
@@ -1561,5 +1613,182 @@ mod tests {
             .copied()
             .unwrap_or(0);
         assert_eq!(depth_count, 0);
+    }
+
+    // -----------------------------------------------------------------------
+    // Forward-compat: unknown future event kinds are no-ops, not batch-breakers
+    // (TASK-021)
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn unknown_future_kind_does_not_break_batch() {
+        use crate::client::Message;
+        use seed_core::events::to_envelope;
+        use seed_core::levels::xp_for_level;
+
+        let ts = chrono::Utc::now();
+        let mut app = App::new_for_test(seed_core::initial_state(0));
+
+        // Batch: a synthetic future-kind envelope (unknown to this build) plus a
+        // known TraitXpChanged that lifts "flow" from level 1 to level 2.
+        let flow = TraitId("flow".into());
+        let l2 = xp_for_level(2);
+        let known = to_envelope(
+            &CoreEvent::TraitXpChanged {
+                trait_id: flow.clone(),
+                delta: l2 as i64,
+                new_xp: l2,
+            },
+            ts,
+        );
+        let future = EventEnvelope {
+            v: 1,
+            ts,
+            kind: "seed.future.something".into(),
+            data: serde_json::json!({ "anything": 42 }),
+        };
+
+        // Unknown-first ordering proves the unknown one doesn't abort the batch.
+        app.handle_ipc(Message::StateDiff {
+            events: vec![future, known],
+        });
+
+        assert_eq!(
+            *app.state.traits.get(&flow).unwrap(),
+            l2,
+            "known event must still apply after an unknown future-kind event"
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // Tier-up toast (TASK-025): TierChanged raises a TierUp toast and supersedes
+    // a co-occurring LevelUp.
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn tier_changed_raises_tier_up_toast() {
+        use crate::view::toast::ToastKind;
+        use seed_core::domain::Tier;
+        use seed_core::events::to_envelope;
+
+        let mut app = App::new_for_test(seed_core::initial_state(0));
+        let env = to_envelope(
+            &CoreEvent::TierChanged {
+                from: Tier::Seed,
+                to: Tier::Sprout,
+                total_level: 18,
+            },
+            chrono::Utc::now(),
+        );
+        app.apply_envelope(env, true);
+
+        let toast = app
+            .toast
+            .as_ref()
+            .expect("tier change should raise a toast");
+        assert!(
+            matches!(toast.kind, ToastKind::TierUp),
+            "toast kind should be TierUp, was {:?}",
+            toast.kind
+        );
+        assert!(
+            toast.msg.contains("SPROUT"),
+            "toast should name the destination tier, was {:?}",
+            toast.msg
+        );
+    }
+
+    #[test]
+    fn tier_up_supersedes_co_occurring_level_up() {
+        use crate::client::Message;
+        use seed_core::domain::Tier;
+        use seed_core::events::to_envelope;
+        use seed_core::levels::xp_for_level;
+
+        let ts = chrono::Utc::now();
+        let mut app = App::new_for_test(seed_core::initial_state(0));
+
+        // Real daemon batch order: the XP change (which the TUI reads as a
+        // level-up) precedes the TierChanged. Tier-up must win the slot.
+        let flow = TraitId("flow".into());
+        let l2 = xp_for_level(2);
+        let level_up_driver = to_envelope(
+            &CoreEvent::TraitXpChanged {
+                trait_id: flow,
+                delta: l2 as i64,
+                new_xp: l2,
+            },
+            ts,
+        );
+        let tier = to_envelope(
+            &CoreEvent::TierChanged {
+                from: Tier::Seed,
+                to: Tier::Sprout,
+                total_level: 18,
+            },
+            ts,
+        );
+
+        app.handle_ipc(Message::StateDiff {
+            events: vec![level_up_driver, tier],
+        });
+
+        let toast = app.toast.as_ref().expect("a toast should be present");
+        assert!(
+            matches!(toast.kind, crate::view::toast::ToastKind::TierUp),
+            "tier-up should occupy the slot over the co-occurring level-up, was {:?}",
+            toast.kind
+        );
+    }
+
+    #[test]
+    fn stale_tier_up_does_not_suppress_a_later_level_up() {
+        use crate::client::Message;
+        use crate::view::toast::ToastKind;
+        use seed_core::domain::Tier;
+        use seed_core::events::to_envelope;
+        use seed_core::levels::xp_for_level;
+
+        let ts = chrono::Utc::now();
+        let mut app = App::new_for_test(seed_core::initial_state(0));
+
+        // Batch 1: a tier crossing leaves a TierUp toast lingering in the slot.
+        app.handle_ipc(Message::StateDiff {
+            events: vec![to_envelope(
+                &CoreEvent::TierChanged {
+                    from: Tier::Seed,
+                    to: Tier::Sprout,
+                    total_level: 18,
+                },
+                ts,
+            )],
+        });
+        assert!(matches!(
+            app.toast.as_ref().map(|t| &t.kind),
+            Some(ToastKind::TierUp)
+        ));
+
+        // Batch 2: an unrelated level-up with NO tier change. Suppression is
+        // batch-scoped, so the stale TierUp must not swallow this level-up.
+        let flow = TraitId("flow".into());
+        let l2 = xp_for_level(2);
+        app.handle_ipc(Message::StateDiff {
+            events: vec![to_envelope(
+                &CoreEvent::TraitXpChanged {
+                    trait_id: flow,
+                    delta: l2 as i64,
+                    new_xp: l2,
+                },
+                ts,
+            )],
+        });
+
+        let toast = app.toast.as_ref().expect("a toast should be present");
+        assert!(
+            matches!(toast.kind, ToastKind::LevelUp),
+            "a level-up in a tier-free batch must show, not be suppressed by a \
+             stale tier-up, was {:?}",
+            toast.kind
+        );
     }
 }
