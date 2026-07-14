@@ -13,6 +13,8 @@ use crate::palette::Palette;
 pub enum ToastKind {
     XpGain,
     LevelUp,
+    /// Companion crossed an evolution tier (a macro-celebration moment).
+    TierUp,
     FocusToken,
     #[allow(dead_code)]
     Other,
@@ -39,6 +41,14 @@ impl Toast {
         Toast {
             msg: msg.into(),
             kind: ToastKind::LevelUp,
+            created_tick: tick,
+        }
+    }
+
+    pub fn tier_up(msg: impl Into<String>, tick: u32) -> Self {
+        Toast {
+            msg: msg.into(),
+            kind: ToastKind::TierUp,
             created_tick: tick,
         }
     }
@@ -71,6 +81,7 @@ impl Widget for ToastWidget<'_> {
         let color = match self.toast.kind {
             ToastKind::XpGain => downgrade_color(self.palette.accent, self.truecolor),
             ToastKind::LevelUp => downgrade_color(self.palette.accent2, self.truecolor),
+            ToastKind::TierUp => downgrade_color(self.palette.fg_bright, self.truecolor),
             ToastKind::FocusToken => downgrade_color(self.palette.warm, self.truecolor),
             ToastKind::Other => downgrade_color(self.palette.warm, self.truecolor),
         };
