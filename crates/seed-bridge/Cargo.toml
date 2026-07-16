@@ -1,0 +1,24 @@
+[package]
+name = "seed-bridge"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "seed-bridge"
+path = "src/main.rs"
+
+[dependencies]
+seed-core = { path = "../seed-core" }
+seed-wire = { path = "../seed-wire" }
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio = { workspace = true, features = ["io-std"] }
+interprocess.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

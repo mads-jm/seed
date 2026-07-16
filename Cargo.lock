@@ -1227,6 +1227,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
+name = "seed-bridge"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "interprocess",
+ "seed-core",
+ "seed-wire",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "seed-core"
 version = "0.1.0"
 dependencies = [
