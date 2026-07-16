@@ -1,153 +1,20 @@
 /// IPC client: connects to seedd, auto-spawns if absent, handles reconnect.
 ///
-/// Wire protocol types are duplicated here (not imported from seed-daemon which
-/// is a binary-only crate). The JSON framing is identical: 4-byte big-endian
-/// length prefix + UTF-8 JSON body.
+/// Wire protocol types (`Message`, `Action`, `ResponseResult`) and the framing
+/// helpers live in the [`seed_wire`] crate so seed-tui, seed-daemon, and
+/// seed-bridge all agree on byte layout. Re-exported here under
+/// `crate::client::{Message, Action, ResponseResult}` for backward compat with
+/// existing call sites.
 use anyhow::{Context, Result, bail};
 use interprocess::local_socket::tokio::prelude::*;
 use interprocess::local_socket::{GenericNamespaced, ToNsName};
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::path::Path;
-use tokio::io::{AsyncReadExt, AsyncWriteExt, BufReader};
+use tokio::io::BufReader;
 use tokio::sync::mpsc;
 use tokio::time::{Duration, sleep};
 use tracing::{debug, info, warn};
 
-use seed_core::{
-    EventEnvelope, ReminderId, State, TraitId,
-    domain::{FocusPattern, IntegrationEnhancement},
-};
-
-const MAX_FRAME: usize = 4 * 1024 * 1024;
-
-// ---------------------------------------------------------------------------
-// Wire types (duplicated from seed-daemon::wire — same JSON shape)
-// ---------------------------------------------------------------------------
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type")]
-pub enum Message {
-    Request {
-        id: u64,
-        action: Action,
-    },
-    Response {
-        id: u64,
-        result: ResponseResult,
-    },
-    StateDiff {
-        events: Vec<EventEnvelope>,
-    },
-    Snapshot {
-        state: Box<State>,
-    },
-    Hello {
-        daemon_version: String,
-        protocol_version: u32,
-    },
-    Ping,
-    Pong,
-    Error {
-        message: String,
-    },
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "status", rename_all = "snake_case")]
-pub enum ResponseResult {
-    Ok { value: Value },
-    Err { message: String },
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "kind")]
-pub enum Action {
-    Complete {
-        reminder_id: ReminderId,
-    },
-    Snooze {
-        reminder_id: ReminderId,
-        minutes: u32,
-    },
-    TogglePin {
-        reminder_id: ReminderId,
-    },
-    ToggleEnabled {
-        reminder_id: ReminderId,
-    },
-    SetPalette {
-        palette: String,
-    },
-    SetTraitLevel {
-        trait_id: TraitId,
-        level: u8,
-    },
-    TriggerReminderNow {
-        reminder_id: Option<ReminderId>,
-    },
-    Subscribe,
-    Shutdown,
-    /// Reset all companion progress to initial_state. Confirmed by user in tweaks panel.
-    Reset,
-    SetReminderInterval {
-        reminder_id: ReminderId,
-        minutes: u32,
-    },
-    SetXpMultiplier {
-        multiplier: u32,
-    },
-    /// Integrate a trait at level 99: reset XP to 0 and apply a visual enhancement.
-    Integrate {
-        trait_id: TraitId,
-        enhancement_id: IntegrationEnhancement,
-    },
-    /// Spend one focus token to activate a focus phase with XP multipliers.
-    ActivateFocusPhase {
-        pattern: FocusPattern,
-        traits: Vec<TraitId>,
-    },
-}
-
-// ---------------------------------------------------------------------------
-// Framing
-// ---------------------------------------------------------------------------
-
-async fn write_frame(
-    writer: &mut (impl tokio::io::AsyncWrite + Unpin),
-    msg: &Message,
-) -> Result<()> {
-    let body = serde_json::to_vec(msg)?;
-    if body.len() > MAX_FRAME {
-        bail!("outgoing frame too large: {} bytes", body.len());
-    }
-    let len = (body.len() as u32).to_be_bytes();
-    writer.write_all(&len).await?;
-    writer.write_all(&body).await?;
-    writer.flush().await?;
-    Ok(())
-}
-
-async fn read_frame(reader: &mut (impl tokio::io::AsyncRead + Unpin)) -> Result<Option<Message>> {
-    let mut len_buf = [0u8; 4];
-    match reader.read_exact(&mut len_buf).await {
-        Ok(_) => {}
-        Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => return Ok(None),
-        Err(e) => return Err(e.into()),
-    }
-    let len = u32::from_be_bytes(len_buf) as usize;
-    if len > MAX_FRAME {
-        bail!(
-            "incoming frame too large: {} bytes (max {})",
-            len,
-            MAX_FRAME
-        );
-    }
-    let mut body = vec![0u8; len];
-    reader.read_exact(&mut body).await?;
-    let msg = serde_json::from_slice(&body)?;
-    Ok(Some(msg))
-}
+pub use seed_wire::{Action, Message, ResponseResult, read_frame, write_frame};
 
 // ---------------------------------------------------------------------------
 // IpcClient

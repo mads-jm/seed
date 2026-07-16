@@ -1253,6 +1253,7 @@ dependencies = [
  "notify-rust",
  "pretty_assertions",
  "seed-core",
+ "seed-wire",
  "serde",
  "serde_json",
  "tempfile",
@@ -1275,6 +1276,7 @@ dependencies = [
  "pretty_assertions",
  "ratatui",
  "seed-core",
+ "seed-wire",
  "serde",
  "serde_json",
  "tempfile",
@@ -1283,6 +1285,17 @@ dependencies = [
  "tracing-appender",
  "tracing-subscriber",
  "unicode-width 0.1.14",
+]
+
+[[package]]
+name = "seed-wire"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "seed-core",
+ "serde",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]

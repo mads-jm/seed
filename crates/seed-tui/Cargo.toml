@@ -15,6 +15,7 @@ path = "src/lib.rs"
 
 [dependencies]
 seed-core = { path = "../seed-core" }
+seed-wire = { path = "../seed-wire" }
 anyhow.workspace = true
 serde.workspace = true
 serde_json.workspace = true
