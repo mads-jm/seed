@@ -89,19 +89,13 @@ fn emit(frame: &OutFrame) {
 // Socket helpers
 // ---------------------------------------------------------------------------
 
+/// Resolve the socket name serving this process's `SEED_HOME`, so the bridge
+/// follows the same home as the daemon and TUI (default `~/.seed` unless the
+/// env var says otherwise).
 fn socket_name() -> Result<interprocess::local_socket::Name<'static>> {
-    #[cfg(unix)]
-    {
-        seed_wire::SOCKET_NAME
-            .to_ns_name::<GenericNamespaced>()
-            .context("build socket name")
-    }
-    #[cfg(windows)]
-    {
-        seed_wire::socket_pipe_name()
-            .to_ns_name::<GenericNamespaced>()
-            .context("build pipe name")
-    }
+    seed_wire::socket_name()
+        .to_ns_name::<GenericNamespaced>()
+        .context("build socket name")
 }
 
 // ---------------------------------------------------------------------------

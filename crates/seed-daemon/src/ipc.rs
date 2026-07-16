@@ -37,25 +37,14 @@ pub enum Command {
     Shutdown,
 }
 
-/// Resolve the platform-appropriate socket name.
+/// Resolve the socket name serving this process's `SEED_HOME`.
+///
+/// The name itself comes from `seed_wire::socket_name()` so daemon, TUI, and
+/// bridge derive it identically; this only builds the `interprocess` `Name`.
 pub fn socket_name() -> Result<Name<'static>> {
-    #[cfg(unix)]
-    {
-        // Unix: abstract namespace socket name.
-        let name = "@seed-daemon.sock"
-            .to_ns_name::<GenericNamespaced>()
-            .context("failed to build socket name")?;
-        Ok(name)
-    }
-    #[cfg(windows)]
-    {
-        let username = std::env::var("USERNAME").unwrap_or_else(|_| "seedd".to_string());
-        let pipe = format!("seed-daemon-{username}");
-        let name = pipe
-            .to_ns_name::<GenericNamespaced>()
-            .context("failed to build pipe name")?;
-        Ok(name)
-    }
+    seed_wire::socket_name()
+        .to_ns_name::<GenericNamespaced>()
+        .context("failed to build socket name")
 }
 
 /// Attempt a single Ping to an existing daemon. Returns `true` if a live

@@ -228,21 +228,15 @@ where
     }
 }
 
-/// Resolve the platform-appropriate socket name (mirrors seed-daemon::ipc::socket_name).
+/// Resolve the socket name serving this process's `SEED_HOME`.
+///
+/// The name comes from `seed_wire::socket_name()`, so the TUI, the daemon it
+/// spawns (which inherits `SEED_HOME` — see `spawn_daemon`), and `seed-bridge`
+/// all agree; this only builds the `interprocess` `Name`.
 fn socket_name() -> Result<interprocess::local_socket::Name<'static>> {
-    #[cfg(unix)]
-    {
-        "@seed-daemon.sock"
-            .to_ns_name::<GenericNamespaced>()
-            .context("failed to build socket name")
-    }
-    #[cfg(windows)]
-    {
-        let username = std::env::var("USERNAME").unwrap_or_else(|_| "seedd".to_string());
-        let pipe = format!("seed-daemon-{username}");
-        pipe.to_ns_name::<GenericNamespaced>()
-            .context("failed to build pipe name")
-    }
+    seed_wire::socket_name()
+        .to_ns_name::<GenericNamespaced>()
+        .context("failed to build socket name")
 }
 
 /// Probe the daemon socket with a single `Ping`, returning `true` if a live

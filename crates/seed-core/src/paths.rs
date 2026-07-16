@@ -7,11 +7,19 @@ use std::path::{Path, PathBuf};
 pub fn seed_home() -> PathBuf {
     std::env::var("SEED_HOME")
         .map(PathBuf::from)
-        .unwrap_or_else(|_| {
-            dirs::home_dir()
-                .unwrap_or_else(|| PathBuf::from("."))
-                .join(".seed")
-        })
+        .unwrap_or_else(|_| default_seed_home())
+}
+
+/// The seed home used when `SEED_HOME` is unset: `<home_dir>/.seed`, or
+/// `./.seed` if the home directory is unavailable.
+///
+/// Deliberately ignores `SEED_HOME` — callers need to recognise the default
+/// home *as* the default even when it was named explicitly via the env var
+/// (`SEED_HOME=~/.seed` and an unset `SEED_HOME` must resolve identically).
+pub fn default_seed_home() -> PathBuf {
+    dirs::home_dir()
+        .unwrap_or_else(|| PathBuf::from("."))
+        .join(".seed")
 }
 
 /// `<home>/events.jsonl` — append-only event log.
