@@ -22,6 +22,10 @@ Feature and component specifications.
 - [[overdue-rollover]] — bound `Overdue` at 2×I; auto-skip restores Dormant, gate XP drain by active hours
 - [[presence-grace]] — (draft, v0.2.0) injected presence signal makes absence penalty-free: away time rolls reminders forward with no streak break, no missed count, no drain
 
+## Event Log / State
+
+- [[replay-fidelity]] — (draft) `CompanionAwakened` is a no-op in `apply_event` while `Action::Reset` rebuilds state in memory, so a full refold across a reset silently reconstructs the wrong state; makes `snapshot.json` load-bearing rather than derived
+
 ## Rendering
 
 - [[glyph-expansion]] — elliptical falloff mask, recursive macro fractal, fixed orbit-card grid (designs A/B/C, all shipped)

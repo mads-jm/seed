@@ -10,6 +10,9 @@ date modified: Wednesday, April 29th 2026, 7:53:29 am
 
 # Inbox
 
+- [ ] __Replay fidelity__ · `CompanionAwakened` is a no-op in the fold [H]
+  `Action::Reset` rebuilds state in memory but the fold discards the event, so any full refold across a reset reconstructs the wrong state — `snapshot.json` is load-bearing, not derived. Observed on a real log: `completed_total` 2 → 75, `awakened_at` → boot time. Untriaged; needs a priority call against the v0.1.0 cut. See [[replay-fidelity]].
+
 # Scoping
 
 - [ ] __TASK-014__ · Close the loop without the TUI [D, L]
