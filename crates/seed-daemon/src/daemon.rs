@@ -113,7 +113,7 @@ impl Daemon {
             state: Arc::new(RwLock::new(state)),
             event_log: Arc::new(Mutex::new(event_log)),
             config,
-            notifier: Arc::new(DesktopNotifier),
+            notifier: Arc::new(DesktopNotifier::new(cmd_tx.clone())),
             broadcast_tx,
             cmd_rx,
             events_since_snapshot: 0,
