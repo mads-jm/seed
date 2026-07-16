@@ -16,27 +16,73 @@
 /// reliable in `cargo test` (not `cargo nextest` without `--cargo-quiet`).
 /// Run explicitly with:
 ///   cargo test --test smoke -- --ignored
+///
+/// # Isolation
+///
+/// Every socket name here is derived from *this test's* temp `SEED_HOME` via
+/// [`test_socket_name`], never from the ambient environment. That matters more
+/// than it looks: `SEED_HOME` is set on the spawned child only, so the test
+/// process's own environment still points at the default home. Resolving the
+/// name from the environment (as `seed_daemon::ipc::socket_name()` does, by
+/// design) would therefore target the developer's *real* daemon — and this test
+/// completes a reminder and then shuts the daemon down. It has done exactly
+/// that. `test_socket_name` asserts it never happens again.
+use std::path::Path;
 use std::time::{Duration, Instant};
 
 use interprocess::local_socket::tokio::prelude::*;
-use seed_core::{EventEnvelope, ReminderId};
-use seed_daemon::ipc::socket_name;
-use seed_daemon::wire::{Action, Message, ResponseResult, read_frame, write_frame};
+use interprocess::local_socket::{GenericNamespaced, Name, ToNsName};
+use seed_core::{EventEnvelope, ReminderId, default_seed_home};
+use seed_daemon::wire::{
+    Action, Message, ResponseResult, read_frame, socket_name_for, write_frame,
+};
 use tokio::io::BufReader;
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
+/// The socket serving `seed_home`, with a hard stop if that resolves to the
+/// socket of the *default* home.
+///
+/// The default home's daemon is the developer's live one, holding real data.
+/// A mis-derived name here is not a failed assertion, it is silent data loss —
+/// so refuse to proceed rather than connect and find out.
+fn test_socket_name(seed_home: &Path) -> Name<'static> {
+    let raw = socket_name_for(seed_home);
+    assert_ne!(
+        raw,
+        socket_name_for(&default_seed_home()),
+        "refusing to run: this test derived the DEFAULT seed home's socket name \
+         ({raw}) from temp home {}. That is the real daemon — the test would \
+         complete a reminder against live data and then shut it down.",
+        seed_home.display(),
+    );
+    raw.to_ns_name::<GenericNamespaced>()
+        .expect("build socket name")
+}
+
+/// Kills the daemon on drop, however the test ends.
+///
+/// Without this, a panic between spawn and the Shutdown step leaks a live
+/// `seedd`; because the child inherits the test harness's stdout, that also
+/// wedges `cargo test`, which waits on a pipe the orphan holds open forever.
+struct ChildGuard(std::process::Child);
+
+impl Drop for ChildGuard {
+    fn drop(&mut self) {
+        // Both calls no-op with an error once the test has reaped it normally.
+        let _ = self.0.kill();
+        let _ = self.0.wait();
+    }
+}
+
 /// Probe whether the daemon socket is up. Returns true if Pong is received.
 ///
 /// The daemon sends a `Hello` frame on connect before any client message.
 /// We drain that first, then send Ping and wait for Pong.
-async fn probe_socket() -> bool {
-    let name = match socket_name() {
-        Ok(n) => n,
-        Err(_) => return false,
-    };
+async fn probe_socket(seed_home: &Path) -> bool {
+    let name = test_socket_name(seed_home);
     use interprocess::local_socket::tokio::Stream;
     let conn = match Stream::connect(name).await {
         Ok(c) => c,
@@ -62,15 +108,26 @@ async fn probe_socket() -> bool {
 }
 
 /// Wait up to `timeout` for the daemon socket to answer a Ping.
-async fn wait_for_socket(timeout: Duration) -> bool {
+async fn wait_for_socket(timeout: Duration, seed_home: &Path) -> bool {
     let deadline = Instant::now() + timeout;
     while Instant::now() < deadline {
-        if probe_socket().await {
+        if probe_socket(seed_home).await {
             return true;
         }
         tokio::time::sleep(Duration::from_millis(100)).await;
     }
     false
+}
+
+/// The tripwire must actually fire — otherwise it is decoration.
+///
+/// Not `#[ignore]`d: this is the guard that keeps the ignored test below from
+/// ever again pointing at a real daemon, so it earns its keep in every run. It
+/// touches no sockets and no daemon.
+#[test]
+#[should_panic(expected = "refusing to run")]
+fn test_socket_name_refuses_the_default_home() {
+    let _ = test_socket_name(&default_seed_home());
 }
 
 // ---------------------------------------------------------------------------
@@ -88,22 +145,25 @@ async fn smoke_daemon_complete_and_shutdown() {
 
     // ---- 2. Spawn seedd ---------------------------------------------------
     let seedd_bin = env!("CARGO_BIN_EXE_seedd");
-    let mut child = std::process::Command::new(seedd_bin)
-        .arg("--foreground")
-        .env("SEED_HOME", &seed_home)
-        .env("SEED_LOG", "warn") // suppress noise in test output
-        .spawn()
-        .expect("failed to spawn seedd");
+    // SEED_HOME is set on the child only — the test process keeps its own
+    // environment, which is why every socket name below is derived explicitly
+    // from `seed_home` rather than resolved from the ambient env.
+    let mut child = ChildGuard(
+        std::process::Command::new(seedd_bin)
+            .arg("--foreground")
+            .env("SEED_HOME", &seed_home)
+            .env("SEED_LOG", "warn") // suppress noise in test output
+            .spawn()
+            .expect("failed to spawn seedd"),
+    );
 
     // ---- 3. Wait for socket -----------------------------------------------
-    let up = wait_for_socket(Duration::from_secs(5)).await;
-    if !up {
-        child.kill().ok();
-        panic!("seedd socket did not become available within 5s");
-    }
+    // ChildGuard reaps the daemon from here on, including on panic.
+    let up = wait_for_socket(Duration::from_secs(5), &seed_home).await;
+    assert!(up, "seedd socket did not become available within 5s");
 
     // ---- 4. Connect -------------------------------------------------------
-    let name = socket_name().expect("socket name");
+    let name = test_socket_name(&seed_home);
     use interprocess::local_socket::tokio::Stream;
     let conn = Stream::connect(name)
         .await
@@ -233,13 +293,14 @@ async fn smoke_daemon_complete_and_shutdown() {
     // Wait for process exit (up to 3s).
     let shutdown_start = Instant::now();
     let exit_status = loop {
-        match child.try_wait().expect("try_wait") {
+        match child.0.try_wait().expect("try_wait") {
             Some(status) => break status,
             None => {
-                if shutdown_start.elapsed() > Duration::from_secs(3) {
-                    child.kill().ok();
-                    panic!("seedd did not exit within 3s after Shutdown request");
-                }
+                // ChildGuard kills it on the way out of this panic.
+                assert!(
+                    shutdown_start.elapsed() <= Duration::from_secs(3),
+                    "seedd did not exit within 3s after Shutdown request"
+                );
                 std::thread::sleep(Duration::from_millis(100));
             }
         }
