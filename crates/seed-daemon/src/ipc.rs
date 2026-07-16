@@ -64,10 +64,11 @@ pub async fn probe_existing() -> bool {
     if write_frame(&mut wr, &Message::Ping).await.is_err() {
         return false;
     }
-    matches!(
-        tokio::time::timeout(std::time::Duration::from_secs(1), read_frame(&mut rd)).await,
-        Ok(Ok(Some(Message::Pong)))
-    )
+    // Must drain the daemon's unsolicited Hello before the Pong — see
+    // `seed_wire::await_pong`. Reading a single frame here would always see
+    // Hello, so this lock would never fire and a duplicate daemon would get
+    // as far as failing to bind.
+    seed_wire::await_pong(&mut rd, std::time::Duration::from_secs(1)).await
 }
 
 /// Run the IPC listener. Accepts connections and spawns a handler task for each.

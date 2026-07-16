@@ -20,6 +20,7 @@ use anyhow::{Result, bail};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::path::{Path, PathBuf};
+use std::time::Duration;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
 use seed_core::{
@@ -275,6 +276,34 @@ pub async fn read_frame(reader: &mut (impl AsyncRead + Unpin)) -> Result<Option<
     Ok(Some(msg))
 }
 
+/// Wait for a `Pong`, skipping any other frames that arrive first, and give up
+/// after `timeout`.
+///
+/// **A liveness probe must use this rather than reading a single frame.** The
+/// daemon writes an unsolicited `Hello` to every connection the moment it is
+/// accepted, before reading anything. A probe that reads one frame and matches
+/// it against `Pong` therefore sees `Hello` and concludes — always, even
+/// against a perfectly healthy daemon — that nothing is listening. Callers then
+/// spawn a redundant daemon that dies on `AddrInUse`, and report a timeout.
+///
+/// Skipping (rather than rejecting) unexpected frames also keeps the probe
+/// correct if a `StateDiff` broadcast lands between the `Hello` and the `Pong`.
+pub async fn await_pong(reader: &mut (impl AsyncRead + Unpin), timeout: Duration) -> bool {
+    tokio::time::timeout(timeout, async {
+        loop {
+            match read_frame(reader).await {
+                Ok(Some(Message::Pong)) => return true,
+                // Hello, a StateDiff, anything else — keep looking.
+                Ok(Some(_)) => continue,
+                // Clean EOF or a protocol error: nobody healthy is on the line.
+                Ok(None) | Err(_) => return false,
+            }
+        }
+    })
+    .await
+    .unwrap_or(false)
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -422,6 +451,67 @@ mod tests {
             socket_name_for(Path::new("/tmp/seed-stable")),
             socket_name_for(Path::new("/tmp/seed-stable")),
         );
+    }
+
+    // -----------------------------------------------------------------------
+    // Liveness probe
+    // -----------------------------------------------------------------------
+
+    /// Encode frames the way a daemon would, into a buffer we can read back.
+    async fn framed(msgs: &[Message]) -> Vec<u8> {
+        let mut buf = Vec::new();
+        for m in msgs {
+            write_frame(&mut buf, m).await.expect("encode frame");
+        }
+        buf
+    }
+
+    #[tokio::test]
+    async fn await_pong_skips_the_unsolicited_hello() {
+        // The regression: the daemon always sends Hello first, so a probe that
+        // reads one frame sees Hello and wrongly reports "no daemon".
+        let buf = framed(&[
+            Message::Hello {
+                daemon_version: "0.1.0".into(),
+                protocol_version: PROTOCOL_VERSION,
+            },
+            Message::Pong,
+        ])
+        .await;
+        let mut reader = tokio::io::BufReader::new(buf.as_slice());
+        assert!(await_pong(&mut reader, Duration::from_secs(1)).await);
+    }
+
+    #[tokio::test]
+    async fn await_pong_skips_a_diff_between_hello_and_pong() {
+        let buf = framed(&[
+            Message::Hello {
+                daemon_version: "0.1.0".into(),
+                protocol_version: PROTOCOL_VERSION,
+            },
+            Message::StateDiff { events: vec![] },
+            Message::Pong,
+        ])
+        .await;
+        let mut reader = tokio::io::BufReader::new(buf.as_slice());
+        assert!(await_pong(&mut reader, Duration::from_secs(1)).await);
+    }
+
+    #[tokio::test]
+    async fn await_pong_false_when_stream_ends_without_pong() {
+        let buf = framed(&[Message::Hello {
+            daemon_version: "0.1.0".into(),
+            protocol_version: PROTOCOL_VERSION,
+        }])
+        .await;
+        let mut reader = tokio::io::BufReader::new(buf.as_slice());
+        assert!(!await_pong(&mut reader, Duration::from_secs(1)).await);
+    }
+
+    #[tokio::test]
+    async fn await_pong_false_on_empty_stream() {
+        let mut reader = tokio::io::BufReader::new(&[][..]);
+        assert!(!await_pong(&mut reader, Duration::from_secs(1)).await);
     }
 
     #[test]

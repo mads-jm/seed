@@ -239,8 +239,8 @@ fn socket_name() -> Result<interprocess::local_socket::Name<'static>> {
         .context("failed to build socket name")
 }
 
-/// Probe the daemon socket with a single `Ping`, returning `true` if a live
-/// daemon answers `Pong` within 1s. Mirrors `seed-daemon::ipc::probe_existing`.
+/// Probe the daemon socket with a `Ping`, returning `true` if a live daemon
+/// answers `Pong` within 1s. Mirrors `seed-daemon::ipc::probe_existing`.
 async fn probe_ready() -> bool {
     let name = match socket_name() {
         Ok(n) => n,
@@ -256,10 +256,11 @@ async fn probe_ready() -> bool {
     if write_frame(&mut wr, &Message::Ping).await.is_err() {
         return false;
     }
-    matches!(
-        tokio::time::timeout(Duration::from_secs(1), read_frame(&mut rd)).await,
-        Ok(Ok(Some(Message::Pong)))
-    )
+    // Must drain the daemon's unsolicited Hello before the Pong — see
+    // `seed_wire::await_pong`. Reading a single frame here would always see
+    // Hello, making `seed log` spawn a redundant daemon and then time out even
+    // though a healthy daemon was listening the whole time.
+    seed_wire::await_pong(&mut rd, Duration::from_secs(1)).await
 }
 
 /// Ensure a daemon is reachable: probe the socket, and if none answers, spawn
